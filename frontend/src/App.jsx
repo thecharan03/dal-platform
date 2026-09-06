@@ -12,7 +12,13 @@ import {
 import L from "leaflet";
 import "./App.css";
 
-const API_BASE = "http://localhost:8000/api/v1";
+const API_ROOT =
+  import.meta.env.VITE_API_URL ||
+  "http://localhost:8000";
+
+const API_BASE = `${API_ROOT}/api/v1`;
+
+const WS_BASE = API_ROOT.replace(/^http/, "ws");
 const api = axios.create({ baseURL: API_BASE, timeout: 20000 });
 const NER_CENTER = [25.6, 91.9];
 const NER_BOUNDS = [[21.7, 87.9], [29.6, 97.5]];
@@ -657,8 +663,10 @@ export default function App() {
   const loadEvents = useCallback(async id => { if (!id) return; try { const r = await api.get(`/shipments/${id}/events`); setEvents(r.data || []); } catch { setEvents([]); } }, []);
   useEffect(() => { load(); const timer = setInterval(load, 20000); return () => clearInterval(timer); }, [load]);
   useEffect(() => { if (selected?.id) loadEvents(selected.id); }, [selected?.id, loadEvents]);
-  useEffect(() => { try { const ws = new WebSocket("ws://localhost:8000/ws/control-room"); wsRef.current = ws; ws.onmessage = () => load(); ws.onclose = () => {}; return () => ws.close(); } catch {} }, [load]);
-  async function assign(id, vehicle_id) { try { await api.post(`/shipments/${id}/assign-vehicle`, null, { params: { vehicle_id } }); await load(); } catch(e) { alert(errorText(e)); } }
+ const ws = new WebSocket(
+  `${WS_BASE}/ws/control-room`
+);
+async function assign(id, vehicle_id) { try { await api.post(`/shipments/${id}/assign-vehicle`, null, { params: { vehicle_id } }); await load(); } catch(e) { alert(errorText(e)); } }
   async function cancel(id) { const reason = window.prompt("Cancellation reason:", "Cancelled by manager"); if (reason === null) return; try { await api.post(`/shipments/${id}/cancel`, null, { params: { reason } }); await load(); } catch(e) { alert(errorText(e)); } }
   async function deliver(id) { if (!window.confirm("Mark this shipment as delivered?")) return; try { await api.post(`/shipments/${id}/deliver`); await load(); } catch(e) { alert(errorText(e)); } }
   const content = page === "dashboard" ? <Dashboard data={data} selected={selected} setSelected={setSelected} vehicles={data.vehicles || []} onAssign={assign} onCancel={cancel} onDeliver={deliver} events={events} setFollow={setFollow} follow={follow} onRefresh={load}/> : page === "shipments" ? <ShipmentsPage data={data} vehicles={data.vehicles || []} onAssign={assign} onCancel={cancel} onDeliver={deliver} selected={selected} setSelected={setSelected}/> : page === "vehicles" ? <VehiclesPage vehicles={data.vehicles || []} onRefresh={load}/> : <AnalyticsPage data={data} vehicles={data.vehicles || []}/>;
