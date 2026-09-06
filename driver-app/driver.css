@@ -1,0 +1,2035 @@
+/* =========================================================
+   DAL DRIVER — PROFESSIONAL NAVIGATION UI
+   ========================================================= */
+
+:root {
+    --bg: #070b14;
+    --panel: #0d1422;
+    --panel-2: #111a2b;
+    --panel-3: #162136;
+
+    --border: rgba(255, 255, 255, 0.08);
+    --border-strong: rgba(255, 255, 255, 0.13);
+
+    --text: #f7f9fc;
+    --muted: #8e9aaf;
+    --muted-2: #657186;
+
+    --blue: #3b82f6;
+    --blue-dark: #2563eb;
+
+    --green: #22c55e;
+    --yellow: #f59e0b;
+    --red: #ef4444;
+
+    --shadow: 0 20px 50px rgba(0, 0, 0, 0.28);
+
+    --radius: 16px;
+    --radius-sm: 11px;
+}
+
+
+/* =========================================================
+   RESET
+   ========================================================= */
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html,
+body {
+    width: 100%;
+    height: 100%;
+}
+
+body {
+    min-width: 320px;
+    overflow: hidden;
+
+    background: var(--bg);
+    color: var(--text);
+
+    font-family:
+        "Inter",
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+}
+
+button,
+input,
+select {
+    font: inherit;
+}
+
+button {
+    border: 0;
+    cursor: pointer;
+}
+
+button:disabled {
+    cursor: not-allowed;
+}
+
+
+/* =========================================================
+   APP
+   ========================================================= */
+
+#app {
+    width: 100%;
+    height: 100vh;
+
+    display: flex;
+    flex-direction: column;
+
+    background:
+        radial-gradient(
+            circle at 20% 0%,
+            rgba(59, 130, 246, 0.08),
+            transparent 30%
+        ),
+        var(--bg);
+}
+
+
+/* =========================================================
+   TOP NAVBAR
+   ========================================================= */
+
+.topbar {
+    height: 68px;
+    min-height: 68px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 0 22px;
+
+    background: rgba(7, 11, 20, 0.96);
+
+    border-bottom: 1px solid var(--border);
+
+    position: relative;
+    z-index: 1000;
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+}
+
+.brand-mark {
+    width: 38px;
+    height: 38px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 11px;
+
+    background: linear-gradient(
+        135deg,
+        var(--blue),
+        #1d4ed8
+    );
+
+    color: white;
+
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+
+    box-shadow:
+        0 7px 22px rgba(37, 99, 235, 0.3);
+}
+
+.brand-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.brand-text strong {
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.brand-text span {
+    color: var(--muted);
+    font-size: 10px;
+    font-weight: 500;
+}
+
+.connection-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    padding: 7px 11px;
+
+    border: 1px solid var(--border);
+
+    border-radius: 999px;
+
+    background: rgba(255, 255, 255, 0.025);
+
+    color: var(--muted);
+
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.status-dot {
+    width: 7px;
+    height: 7px;
+
+    border-radius: 50%;
+
+    background: var(--yellow);
+
+    box-shadow:
+        0 0 0 4px rgba(245, 158, 11, 0.08);
+}
+
+.connection-status.connected .status-dot,
+.vehicle-status.connected .status-dot {
+    background: var(--green);
+
+    box-shadow:
+        0 0 0 4px rgba(34, 197, 94, 0.08);
+}
+
+.connection-status.error .status-dot {
+    background: var(--red);
+
+    box-shadow:
+        0 0 0 4px rgba(239, 68, 68, 0.08);
+}
+
+
+/* =========================================================
+   MAIN LAYOUT
+   ========================================================= */
+
+.driver-layout {
+    flex: 1;
+    min-height: 0;
+
+    display: grid;
+
+    grid-template-columns: minmax(0, 1fr) 430px;
+
+    overflow: hidden;
+}
+
+
+/* =========================================================
+   MAP
+   ========================================================= */
+
+.map-section {
+    position: relative;
+
+    min-width: 0;
+    min-height: 0;
+
+    background: #0a101c;
+}
+
+#map {
+    position: absolute;
+
+    inset: 0;
+
+    width: 100%;
+    height: 100%;
+
+    background: #dce4ea;
+}
+
+
+/* =========================================================
+   LEAFLET CUSTOMIZATION
+   ========================================================= */
+
+.leaflet-container {
+    font-family: "Inter", sans-serif;
+}
+
+.leaflet-control-zoom {
+    border: 0 !important;
+
+    margin: 18px !important;
+
+    box-shadow: var(--shadow) !important;
+}
+
+.leaflet-control-zoom a {
+    width: 36px !important;
+    height: 36px !important;
+
+    line-height: 36px !important;
+
+    background: rgba(13, 20, 34, 0.94) !important;
+
+    color: white !important;
+
+    border: 1px solid var(--border) !important;
+
+    backdrop-filter: blur(10px);
+}
+
+.leaflet-control-zoom a:first-child {
+    border-radius: 9px 9px 0 0;
+}
+
+.leaflet-control-zoom a:last-child {
+    border-radius: 0 0 9px 9px;
+}
+
+.leaflet-control-attribution {
+    font-size: 9px !important;
+
+    background: rgba(7, 11, 20, 0.72) !important;
+
+    color: #8490a3 !important;
+}
+
+.leaflet-control-attribution a {
+    color: #9fb8dd !important;
+}
+
+
+/* =========================================================
+   MAP OVERLAYS
+   ========================================================= */
+
+.map-overlay {
+    position: absolute;
+
+    z-index: 500;
+
+    background: rgba(10, 16, 28, 0.91);
+
+    border: 1px solid rgba(255, 255, 255, 0.09);
+
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.25);
+
+    backdrop-filter: blur(14px);
+}
+
+
+/* =========================================================
+   GPS OVERLAY
+   ========================================================= */
+
+.gps-overlay {
+    top: 18px;
+    left: 18px;
+
+    display: flex;
+    align-items: center;
+
+    gap: 10px;
+
+    padding: 10px 13px;
+
+    border-radius: 12px;
+}
+
+.gps-icon {
+    width: 28px;
+    height: 28px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 8px;
+
+    background: rgba(34, 197, 94, 0.1);
+
+    color: var(--green);
+
+    font-size: 14px;
+}
+
+.gps-overlay strong {
+    display: block;
+
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.gps-overlay span {
+    color: var(--muted);
+
+    font-size: 9px;
+}
+
+
+/* =========================================================
+   NAVIGATION BANNER
+   ========================================================= */
+
+.navigation-banner {
+    top: 18px;
+    left: 50%;
+
+    transform: translateX(-50%);
+
+    width: min(520px, calc(100% - 180px));
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 11px 14px;
+
+    border-radius: 13px;
+
+    border-color: rgba(59, 130, 246, 0.25);
+
+    background:
+        linear-gradient(
+            135deg,
+            rgba(24, 52, 94, 0.96),
+            rgba(9, 18, 34, 0.96)
+        );
+}
+
+.navigation-direction {
+    display: flex;
+    align-items: center;
+
+    gap: 10px;
+}
+
+.direction-icon {
+    width: 34px;
+    height: 34px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 9px;
+
+    background: rgba(59, 130, 246, 0.18);
+
+    color: #72a8ff;
+
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.navigation-direction small {
+    display: block;
+
+    color: #7590b5;
+
+    font-size: 8px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+}
+
+.navigation-direction strong {
+    display: block;
+
+    margin-top: 2px;
+
+    font-size: 12px;
+}
+
+.navigation-distance {
+    text-align: right;
+}
+
+.navigation-distance strong {
+    display: block;
+
+    font-size: 16px;
+}
+
+.navigation-distance span {
+    color: var(--muted);
+
+    font-size: 9px;
+}
+
+
+/* =========================================================
+   MAP CONTROLS
+   ========================================================= */
+
+.map-control {
+    position: absolute;
+
+    right: 18px;
+
+    z-index: 500;
+
+    width: 40px;
+    height: 40px;
+
+    border-radius: 11px;
+
+    background: rgba(10, 16, 28, 0.92);
+
+    border: 1px solid rgba(255, 255, 255, 0.09);
+
+    color: white;
+
+    font-size: 18px;
+
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+
+    backdrop-filter: blur(12px);
+
+    transition:
+        transform 0.18s ease,
+        background 0.18s ease;
+}
+
+.map-control:hover {
+    transform: translateY(-1px);
+
+    background: rgba(24, 35, 55, 0.98);
+}
+
+.recenter-button {
+    bottom: 84px;
+}
+
+.follow-button {
+    bottom: 35px;
+
+    font-size: 17px;
+}
+
+.follow-button.active {
+    color: var(--blue);
+
+    border-color: rgba(59, 130, 246, 0.35);
+
+    background: rgba(37, 99, 235, 0.13);
+}
+
+
+/* =========================================================
+   MAP LEGEND
+   ========================================================= */
+
+.map-legend {
+    bottom: 18px;
+    left: 18px;
+
+    padding: 10px 12px;
+
+    border-radius: 11px;
+
+    min-width: 145px;
+}
+
+.legend-title {
+    margin-bottom: 7px;
+
+    color: #aab5c7;
+
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.7px;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+
+    gap: 7px;
+
+    margin-top: 5px;
+
+    color: #a1adbf;
+
+    font-size: 9px;
+}
+
+.legend-line {
+    width: 21px;
+    height: 3px;
+
+    border-radius: 10px;
+}
+
+.legend-line.safe {
+    background: var(--green);
+}
+
+.legend-line.moderate {
+    background: var(--yellow);
+}
+
+.legend-line.dangerous {
+    background: var(--red);
+}
+
+
+/* =========================================================
+   RIGHT CONTROL PANEL
+   ========================================================= */
+
+.control-panel {
+    min-width: 0;
+
+    height: 100%;
+
+    overflow-y: auto;
+
+    padding: 20px;
+
+    background:
+        linear-gradient(
+            180deg,
+            #0c1321 0%,
+            #09101b 100%
+        );
+
+    border-left: 1px solid var(--border);
+
+    scrollbar-width: thin;
+    scrollbar-color: #29364b transparent;
+}
+
+.control-panel::-webkit-scrollbar {
+    width: 5px;
+}
+
+.control-panel::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.control-panel::-webkit-scrollbar-thumb {
+    background: #29364b;
+
+    border-radius: 10px;
+}
+
+
+/* =========================================================
+   PANEL HEADER
+   ========================================================= */
+
+.panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    margin-bottom: 17px;
+}
+
+.eyebrow {
+    display: block;
+
+    color: #718097;
+
+    font-size: 8px;
+    font-weight: 800;
+
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.panel-header h1 {
+    margin-top: 4px;
+
+    font-size: 20px;
+    line-height: 1.2;
+
+    letter-spacing: -0.4px;
+}
+
+.driver-avatar {
+    width: 38px;
+    height: 38px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    background:
+        linear-gradient(
+            135deg,
+            #263d63,
+            #162640
+        );
+
+    border: 1px solid rgba(255, 255, 255, 0.08);
+
+    color: #a9c8ff;
+
+    font-size: 11px;
+    font-weight: 800;
+}
+
+
+/* =========================================================
+   VEHICLE CARD
+   ========================================================= */
+
+.vehicle-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 12px;
+
+    margin-bottom: 12px;
+
+    border: 1px solid var(--border);
+
+    border-radius: var(--radius-sm);
+
+    background: rgba(255, 255, 255, 0.025);
+}
+
+.vehicle-main {
+    display: flex;
+    align-items: center;
+
+    gap: 10px;
+}
+
+.vehicle-icon {
+    width: 34px;
+    height: 34px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 9px;
+
+    background: rgba(59, 130, 246, 0.1);
+
+    font-size: 17px;
+}
+
+.label {
+    display: block;
+
+    color: var(--muted-2);
+
+    font-size: 8px;
+    font-weight: 700;
+
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+}
+
+.vehicle-main strong {
+    display: block;
+
+    margin-top: 3px;
+
+    font-size: 12px;
+}
+
+.vehicle-status {
+    display: flex;
+    align-items: center;
+
+    gap: 6px;
+
+    color: var(--muted);
+
+    font-size: 9px;
+    font-weight: 600;
+}
+
+
+/* =========================================================
+   SHIPMENT CARD
+   ========================================================= */
+
+.shipment-card {
+    padding: 15px;
+
+    margin-bottom: 12px;
+
+    border: 1px solid var(--border);
+
+    border-radius: var(--radius);
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(21, 34, 56, 0.92),
+            rgba(12, 19, 32, 0.96)
+        );
+
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.12);
+}
+
+.shipment-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+}
+
+.shipment-top h2 {
+    margin-top: 4px;
+
+    font-size: 17px;
+
+    letter-spacing: -0.2px;
+}
+
+.priority-badge {
+    padding: 5px 8px;
+
+    border-radius: 6px;
+
+    font-size: 8px;
+    font-weight: 800;
+
+    letter-spacing: 0.5px;
+
+    text-transform: uppercase;
+}
+
+.priority-badge.critical {
+    color: #fecaca;
+
+    background: rgba(239, 68, 68, 0.13);
+
+    border: 1px solid rgba(239, 68, 68, 0.22);
+}
+
+.priority-badge.high {
+    color: #fde68a;
+
+    background: rgba(245, 158, 11, 0.13);
+
+    border: 1px solid rgba(245, 158, 11, 0.22);
+}
+
+.priority-badge.normal {
+    color: #bfdbfe;
+
+    background: rgba(59, 130, 246, 0.13);
+
+    border: 1px solid rgba(59, 130, 246, 0.22);
+}
+
+
+/* =========================================================
+   SHIPMENT ROUTE
+   ========================================================= */
+
+.shipment-route {
+    margin-top: 15px;
+}
+
+.location-row {
+    display: flex;
+    align-items: center;
+
+    gap: 10px;
+}
+
+.location-marker {
+    width: 24px;
+    height: 24px;
+
+    flex: 0 0 24px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 7px;
+
+    font-size: 8px;
+    font-weight: 800;
+}
+
+.location-marker.pickup {
+    color: #bfdbfe;
+
+    background: rgba(59, 130, 246, 0.15);
+
+    border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.location-marker.destination {
+    color: #bbf7d0;
+
+    background: rgba(34, 197, 94, 0.12);
+
+    border: 1px solid rgba(34, 197, 94, 0.2);
+}
+
+.location-row strong {
+    display: block;
+
+    margin-top: 2px;
+
+    font-size: 11px;
+
+    max-width: 280px;
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.route-connector {
+    width: 1px;
+    height: 17px;
+
+    margin-left: 11px;
+
+    border-left: 1px dashed #3b4b63;
+}
+
+
+/* =========================================================
+   SHIPMENT META
+   ========================================================= */
+
+.shipment-meta {
+    display: grid;
+
+    grid-template-columns: repeat(3, 1fr);
+
+    gap: 7px;
+
+    margin-top: 15px;
+
+    padding-top: 12px;
+
+    border-top: 1px solid var(--border);
+}
+
+.shipment-meta div {
+    min-width: 0;
+}
+
+.shipment-meta span {
+    display: block;
+
+    color: var(--muted-2);
+
+    font-size: 8px;
+}
+
+.shipment-meta strong {
+    display: block;
+
+    margin-top: 3px;
+
+    font-size: 10px;
+
+    text-transform: capitalize;
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+
+/* =========================================================
+   JOURNEY STATS
+   ========================================================= */
+
+.journey-stats {
+    display: grid;
+
+    grid-template-columns: repeat(3, 1fr);
+
+    gap: 8px;
+
+    margin-bottom: 12px;
+}
+
+.journey-stat {
+    display: flex;
+    align-items: center;
+
+    gap: 8px;
+
+    padding: 10px;
+
+    border: 1px solid var(--border);
+
+    border-radius: var(--radius-sm);
+
+    background: rgba(255, 255, 255, 0.025);
+}
+
+.stat-icon {
+    width: 27px;
+    height: 27px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex: 0 0 27px;
+
+    border-radius: 8px;
+
+    background: rgba(255, 255, 255, 0.045);
+
+    color: #91a1b8;
+
+    font-size: 12px;
+}
+
+.journey-stat span:not(.stat-icon) {
+    display: block;
+
+    color: var(--muted-2);
+
+    font-size: 7px;
+    font-weight: 600;
+
+    text-transform: uppercase;
+}
+
+.journey-stat strong {
+    display: block;
+
+    margin-top: 2px;
+
+    font-size: 10px;
+}
+
+
+/* =========================================================
+   RISK CARD
+   ========================================================= */
+
+.risk-card {
+    padding: 14px;
+
+    margin-bottom: 12px;
+
+    border: 1px solid var(--border);
+
+    border-radius: var(--radius);
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(255, 255, 255, 0.035),
+            rgba(255, 255, 255, 0.015)
+        );
+}
+
+.risk-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.risk-header > div:first-child strong {
+    display: block;
+
+    margin-top: 4px;
+
+    font-size: 13px;
+}
+
+.risk-score {
+    font-size: 21px;
+    font-weight: 800;
+}
+
+.risk-progress {
+    width: 100%;
+    height: 5px;
+
+    margin-top: 11px;
+
+    overflow: hidden;
+
+    border-radius: 999px;
+
+    background: rgba(255, 255, 255, 0.07);
+}
+
+.risk-progress-fill {
+    width: 0;
+    height: 100%;
+
+    border-radius: inherit;
+
+    background: var(--green);
+
+    transition:
+        width 0.5s ease,
+        background 0.3s ease;
+}
+
+.risk-details {
+    display: grid;
+
+    grid-template-columns: repeat(3, 1fr);
+
+    gap: 8px;
+
+    margin-top: 11px;
+}
+
+.risk-details span {
+    display: block;
+
+    color: var(--muted-2);
+
+    font-size: 8px;
+}
+
+.risk-details strong {
+    display: block;
+
+    margin-top: 3px;
+
+    font-size: 9px;
+}
+
+
+/* =========================================================
+   ALERT CARD
+   ========================================================= */
+
+.alert-card {
+    display: flex;
+    align-items: flex-start;
+
+    gap: 10px;
+
+    padding: 12px;
+
+    margin-bottom: 12px;
+
+    border-radius: var(--radius-sm);
+
+    background: rgba(239, 68, 68, 0.08);
+
+    border: 1px solid rgba(239, 68, 68, 0.18);
+}
+
+.alert-icon {
+    width: 29px;
+    height: 29px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex: 0 0 29px;
+
+    border-radius: 8px;
+
+    background: rgba(239, 68, 68, 0.13);
+
+    color: #fca5a5;
+
+    font-size: 14px;
+}
+
+.alert-card strong {
+    font-size: 10px;
+}
+
+.alert-card p {
+    margin-top: 3px;
+
+    color: #aeb8c8;
+
+    font-size: 9px;
+    line-height: 1.45;
+}
+
+
+/* =========================================================
+   ROUTES SECTION
+   ========================================================= */
+
+.routes-section {
+    margin-bottom: 13px;
+}
+
+.section-heading {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+
+    margin-bottom: 9px;
+}
+
+.section-heading h3 {
+    margin-top: 4px;
+
+    font-size: 12px;
+}
+
+.live-label {
+    padding: 4px 7px;
+
+    border-radius: 5px;
+
+    color: #86efac;
+
+    background: rgba(34, 197, 94, 0.08);
+
+    border: 1px solid rgba(34, 197, 94, 0.15);
+
+    font-size: 7px;
+    font-weight: 800;
+
+    letter-spacing: 0.7px;
+}
+
+
+/* =========================================================
+   ROUTE LIST
+   ========================================================= */
+
+.route-list {
+    display: flex;
+    flex-direction: column;
+
+    gap: 7px;
+}
+
+.route-card {
+    width: 100%;
+
+    display: grid;
+
+    grid-template-columns: 34px minmax(0, 1fr) auto;
+
+    align-items: center;
+
+    gap: 9px;
+
+    padding: 10px;
+
+    border: 1px solid var(--border);
+
+    border-radius: 11px;
+
+    background: rgba(255, 255, 255, 0.02);
+
+    color: var(--text);
+
+    text-align: left;
+
+    transition:
+        border-color 0.18s ease,
+        background 0.18s ease,
+        transform 0.18s ease;
+}
+
+.route-card:hover {
+    transform: translateY(-1px);
+
+    border-color: var(--border-strong);
+
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.route-card.selected {
+    border-color: rgba(59, 130, 246, 0.48);
+
+    background:
+        linear-gradient(
+            135deg,
+            rgba(37, 99, 235, 0.12),
+            rgba(59, 130, 246, 0.035)
+        );
+}
+
+.route-number {
+    width: 32px;
+    height: 32px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 9px;
+
+    background: rgba(255, 255, 255, 0.045);
+
+    color: #aab6ca;
+
+    font-size: 10px;
+    font-weight: 800;
+}
+
+.route-card.selected .route-number {
+    color: white;
+
+    background: var(--blue);
+}
+
+.route-info {
+    min-width: 0;
+}
+
+.route-title {
+    display: flex;
+    align-items: center;
+
+    gap: 6px;
+}
+
+.route-title strong {
+    font-size: 10px;
+}
+
+.route-recommended {
+    padding: 2px 5px;
+
+    border-radius: 4px;
+
+    color: #86efac;
+
+    background: rgba(34, 197, 94, 0.09);
+
+    font-size: 6px;
+    font-weight: 800;
+
+    text-transform: uppercase;
+}
+
+.route-subtitle {
+    margin-top: 3px;
+
+    color: var(--muted);
+
+    font-size: 8px;
+
+    white-space: nowrap;
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+}
+
+.route-metrics {
+    display: flex;
+    align-items: center;
+
+    gap: 8px;
+
+    margin-top: 5px;
+
+    color: #9ba7ba;
+
+    font-size: 7px;
+}
+
+.route-metrics span {
+    display: flex;
+    align-items: center;
+
+    gap: 3px;
+}
+
+.route-risk {
+    text-align: right;
+}
+
+.route-risk strong {
+    display: block;
+
+    font-size: 10px;
+}
+
+.route-risk span {
+    display: block;
+
+    margin-top: 3px;
+
+    font-size: 7px;
+    font-weight: 700;
+
+    text-transform: uppercase;
+}
+
+
+/* =========================================================
+   RISK COLORS
+   ========================================================= */
+
+.safe-text {
+    color: var(--green);
+}
+
+.moderate-text {
+    color: var(--yellow);
+}
+
+.dangerous-text {
+    color: var(--red);
+}
+
+.route-card.safe {
+    border-left: 3px solid var(--green);
+}
+
+.route-card.moderate {
+    border-left: 3px solid var(--yellow);
+}
+
+.route-card.dangerous {
+    border-left: 3px solid var(--red);
+}
+
+
+/* =========================================================
+   ACTION AREA
+   ========================================================= */
+
+.action-area {
+    display: flex;
+    flex-direction: column;
+
+    gap: 7px;
+
+    margin-top: 3px;
+}
+
+.primary-button,
+.secondary-button,
+.deliver-button {
+    width: 100%;
+
+    min-height: 43px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 8px;
+
+    border-radius: 10px;
+
+    font-size: 10px;
+    font-weight: 700;
+
+    transition:
+        transform 0.18s ease,
+        opacity 0.18s ease,
+        background 0.18s ease;
+}
+
+.primary-button {
+    color: white;
+
+    background:
+        linear-gradient(
+            135deg,
+            #3b82f6,
+            #2563eb
+        );
+
+    box-shadow:
+        0 10px 25px rgba(37, 99, 235, 0.22);
+}
+
+.primary-button:hover:not(:disabled) {
+    transform: translateY(-1px);
+
+    background:
+        linear-gradient(
+            135deg,
+            #4b8df8,
+            #2563eb
+        );
+}
+
+.primary-button:disabled {
+    opacity: 0.42;
+
+    box-shadow: none;
+}
+
+.secondary-button {
+    color: #aab6c8;
+
+    background: rgba(255, 255, 255, 0.035);
+
+    border: 1px solid var(--border);
+}
+
+.secondary-button:hover {
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.deliver-button {
+    color: #bbf7d0;
+
+    background: rgba(34, 197, 94, 0.1);
+
+    border: 1px solid rgba(34, 197, 94, 0.2);
+}
+
+.deliver-button:hover {
+    background: rgba(34, 197, 94, 0.16);
+}
+
+
+/* =========================================================
+   FOOTER
+   ========================================================= */
+
+.driver-footer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 6px;
+
+    padding: 13px 0 3px;
+
+    color: #536074;
+
+    font-size: 7px;
+}
+
+
+/* =========================================================
+   LOADING STATE
+   ========================================================= */
+
+.loading-state {
+    min-height: 100px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    gap: 9px;
+
+    border: 1px dashed var(--border);
+
+    border-radius: 11px;
+
+    color: var(--muted);
+
+    font-size: 8px;
+}
+
+.spinner {
+    width: 20px;
+    height: 20px;
+
+    border: 2px solid rgba(255, 255, 255, 0.08);
+
+    border-top-color: var(--blue);
+
+    border-radius: 50%;
+
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+
+/* =========================================================
+   MODALS
+   ========================================================= */
+
+.modal-backdrop {
+    position: fixed;
+
+    inset: 0;
+
+    z-index: 5000;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 20px;
+
+    background: rgba(2, 6, 12, 0.74);
+
+    backdrop-filter: blur(8px);
+}
+
+.reroute-modal,
+.success-modal {
+    width: min(420px, 100%);
+
+    padding: 25px;
+
+    border: 1px solid var(--border-strong);
+
+    border-radius: 20px;
+
+    background:
+        linear-gradient(
+            145deg,
+            #111b2d,
+            #0a111d
+        );
+
+    box-shadow:
+        0 30px 90px rgba(0, 0, 0, 0.5);
+
+    text-align: center;
+}
+
+.reroute-icon,
+.success-icon {
+    width: 55px;
+    height: 55px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    margin: 0 auto 15px;
+
+    border-radius: 16px;
+
+    font-size: 25px;
+}
+
+.reroute-icon {
+    background: rgba(245, 158, 11, 0.11);
+
+    color: #fbbf24;
+
+    border: 1px solid rgba(245, 158, 11, 0.18);
+}
+
+.success-icon {
+    background: rgba(34, 197, 94, 0.1);
+
+    color: #4ade80;
+
+    border: 1px solid rgba(34, 197, 94, 0.18);
+}
+
+.reroute-modal h2,
+.success-modal h2 {
+    margin-top: 6px;
+
+    font-size: 20px;
+
+    letter-spacing: -0.3px;
+}
+
+.reroute-modal > p,
+.success-modal > p {
+    margin-top: 8px;
+
+    color: var(--muted);
+
+    font-size: 10px;
+    line-height: 1.5;
+}
+
+.reroute-route {
+    display: grid;
+
+    grid-template-columns: 1fr auto 1fr;
+
+    align-items: center;
+
+    gap: 10px;
+
+    margin-top: 18px;
+
+    padding: 12px;
+
+    border-radius: 11px;
+
+    background: rgba(255, 255, 255, 0.03);
+
+    border: 1px solid var(--border);
+}
+
+.reroute-route span,
+.delivery-summary span {
+    display: block;
+
+    color: var(--muted-2);
+
+    font-size: 7px;
+
+    text-transform: uppercase;
+}
+
+.reroute-route strong,
+.delivery-summary strong {
+    display: block;
+
+    margin-top: 4px;
+
+    font-size: 10px;
+}
+
+.arrow {
+    color: var(--muted);
+
+    font-size: 15px;
+}
+
+.modal-actions {
+    display: grid;
+
+    grid-template-columns: 1fr 1fr;
+
+    gap: 8px;
+
+    margin-top: 18px;
+}
+
+.delivery-summary {
+    display: grid;
+
+    gap: 9px;
+
+    margin-top: 17px;
+
+    padding: 13px;
+
+    border-radius: 11px;
+
+    background: rgba(255, 255, 255, 0.03);
+
+    border: 1px solid var(--border);
+
+    text-align: left;
+}
+
+.delivery-summary > div {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+
+/* =========================================================
+   HIDDEN
+   ========================================================= */
+
+.hidden {
+    display: none !important;
+}
+
+
+/* =========================================================
+   VEHICLE MARKER
+   ========================================================= */
+
+.vehicle-marker-wrapper {
+    position: relative;
+
+    width: 42px;
+    height: 42px;
+}
+
+.vehicle-marker {
+    width: 38px;
+    height: 38px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    background:
+        linear-gradient(
+            145deg,
+            #2563eb,
+            #1d4ed8
+        );
+
+    border: 3px solid white;
+
+    box-shadow:
+        0 5px 18px rgba(0, 0, 0, 0.3);
+
+    font-size: 18px;
+}
+
+.vehicle-pulse {
+    position: absolute;
+
+    inset: -5px;
+
+    border: 2px solid rgba(59, 130, 246, 0.35);
+
+    border-radius: 50%;
+
+    animation: vehiclePulse 1.8s ease-out infinite;
+}
+
+@keyframes vehiclePulse {
+    0% {
+        transform: scale(0.75);
+        opacity: 0.8;
+    }
+
+    70% {
+        transform: scale(1.25);
+        opacity: 0;
+    }
+
+    100% {
+        transform: scale(1.25);
+        opacity: 0;
+    }
+}
+
+
+/* =========================================================
+   ROUTE LABEL
+   ========================================================= */
+
+.route-label {
+    padding: 4px 7px;
+
+    border-radius: 6px;
+
+    background: rgba(8, 13, 23, 0.9);
+
+    border: 1px solid rgba(255, 255, 255, 0.12);
+
+    color: white;
+
+    font-size: 8px;
+    font-weight: 700;
+
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+
+/* =========================================================
+   RESPONSIVE — TABLET
+   ========================================================= */
+
+@media (max-width: 1050px) {
+
+    .driver-layout {
+        grid-template-columns: minmax(0, 1fr) 370px;
+    }
+
+    .control-panel {
+        padding: 16px;
+    }
+
+    .navigation-banner {
+        width: min(430px, calc(100% - 150px));
+    }
+}
+
+
+/* =========================================================
+   RESPONSIVE — MOBILE
+   ========================================================= */
+
+@media (max-width: 800px) {
+
+    body {
+        overflow: auto;
+    }
+
+    #app {
+        height: auto;
+        min-height: 100vh;
+    }
+
+    .topbar {
+        height: 58px;
+        min-height: 58px;
+
+        padding: 0 13px;
+    }
+
+    .brand-mark {
+        width: 34px;
+        height: 34px;
+    }
+
+    .brand-text strong {
+        font-size: 12px;
+    }
+
+    .brand-text span {
+        font-size: 8px;
+    }
+
+    .driver-layout {
+        display: flex;
+        flex-direction: column;
+
+        height: auto;
+
+        overflow: visible;
+    }
+
+    .map-section {
+        height: 53vh;
+        min-height: 360px;
+
+        flex: none;
+    }
+
+    .control-panel {
+        height: auto;
+
+        max-height: none;
+
+        overflow: visible;
+
+        border-left: 0;
+
+        border-top: 1px solid var(--border);
+
+        padding: 15px;
+    }
+
+    .navigation-banner {
+        width: calc(100% - 120px);
+
+        top: 12px;
+    }
+
+    .gps-overlay {
+        top: 12px;
+        left: 12px;
+    }
+
+    .map-legend {
+        bottom: 12px;
+        left: 12px;
+    }
+
+    .map-control {
+        right: 12px;
+    }
+
+    .recenter-button {
+        bottom: 75px;
+    }
+
+    .follow-button {
+        bottom: 27px;
+    }
+}
+
+
+/* =========================================================
+   SMALL MOBILE
+   ========================================================= */
+
+@media (max-width: 480px) {
+
+    .connection-status {
+        padding: 6px 8px;
+    }
+
+    .connection-status span:last-child {
+        display: none;
+    }
+
+    .map-section {
+        height: 48vh;
+        min-height: 330px;
+    }
+
+    .control-panel {
+        padding: 13px;
+    }
+
+    .panel-header h1 {
+        font-size: 18px;
+    }
+
+    .shipment-card {
+        padding: 13px;
+    }
+
+    .journey-stat {
+        padding: 8px;
+
+        gap: 5px;
+    }
+
+    .stat-icon {
+        display: none;
+    }
+
+    .journey-stat strong {
+        font-size: 9px;
+    }
+
+    .route-card {
+        grid-template-columns: 31px minmax(0, 1fr) auto;
+
+        gap: 7px;
+
+        padding: 9px;
+    }
+
+    .route-number {
+        width: 29px;
+        height: 29px;
+    }
+
+    .modal-actions {
+        grid-template-columns: 1fr;
+    }
+}
+
+
+/* =========================================================
+   REDUCED MOTION
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+
+        scroll-behavior: auto !important;
+
+        transition-duration: 0.01ms !important;
+    }
+}
