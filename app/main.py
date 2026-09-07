@@ -467,7 +467,7 @@ def compute_intelligence(shipment, vehicle, telemetry):
         prediction = weather_data.get("risk", {})
 
         base_risk = safe_float(
-        prediction.get("risk_score")
+         prediction.get("risk_score")
         )
 
         hazard_risk = safe_float(

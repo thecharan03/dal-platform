@@ -8,23 +8,24 @@ import pandas as pd
 # ------------------------------------------------------------
 # MODEL CONFIGURATION
 # ------------------------------------------------------------
-
 BASE_DIR = os.path.abspath(
     os.path.join(os.path.dirname(__file__), "..", "..")
 )
 
 MODEL_PATH = os.path.join(
     BASE_DIR,
+    "app",
     "ml",
     "models",
-    "disruption_predictor.pkl",
+    "disruption_predictor.pkl"
 )
 
 SCALER_PATH = os.path.join(
     BASE_DIR,
+    "app",
     "ml",
     "models",
-    "scaler.pkl",
+    "scaler.pkl"
 )
 
 FEATURE_NAMES = [
