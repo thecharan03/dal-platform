@@ -2547,9 +2547,9 @@ function routeCardHtml(
       : "ETA unavailable";
 
   const riskPercent =
-    Math.round(
-      route.risk * 100
-    );
+  Math.round(
+    (1 - route.risk) * 100
+  );
 
   const riskLabel =
     route.riskLevel === "dangerous"
