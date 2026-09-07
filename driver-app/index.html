@@ -1,167 +1,362 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
     <meta charset="UTF-8">
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
-    >
+```
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+>
 
-    <meta name="theme-color" content="#0b1220">
+<meta name="theme-color" content="#0b1220">
+<meta name="description"
+    content="DAL Driver - Disaster-Aware Logistics Live Navigation">
 
-    <title>DAL Driver | Live Navigation</title>
+<title>DAL Driver | Live Navigation</title>
 
-    <!-- Leaflet -->
-    <link
-        rel="stylesheet"
-        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-    />
+<!-- Leaflet -->
+<link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+>
 
-    <!-- Inter -->
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
-        rel="stylesheet"
-    />
+<!-- Inter -->
+<link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet"
+>
 
-    <!-- Driver CSS -->
-    <link rel="stylesheet" href="driver.css">
+<!-- Driver CSS -->
+<link rel="stylesheet" href="driver.css">
+```
+
 </head>
 
 <body>
 
 <div id="app">
 
-    <!-- =====================================================
-         TOP NAVIGATION
-    ====================================================== -->
+```
+<!-- =====================================================
+     TOP NAVIGATION
+====================================================== -->
 
-    <header class="topbar">
+<header class="topbar">
 
-        <div class="brand">
-            <div class="brand-mark">
-                DAL
-            </div>
+    <div class="brand">
 
-            <div class="brand-text">
-                <strong>DAL Driver</strong>
-                <span>Live Logistics Navigation</span>
-            </div>
+        <div class="brand-mark">
+            DAL
         </div>
 
-        <div class="connection-status" id="connectionStatus">
-            <span class="status-dot"></span>
-            <span id="connectionText">Connecting...</span>
+        <div class="brand-text">
+            <strong>DAL Driver</strong>
+            <span>Live Logistics Navigation</span>
         </div>
 
-    </header>
+    </div>
+
+    <div class="connection-status" id="connectionStatus">
+        <span class="status-dot"></span>
+        <span id="connectionText">Connecting...</span>
+    </div>
+
+</header>
 
 
-    <!-- =====================================================
-         MAIN APPLICATION
-    ====================================================== -->
+<!-- =====================================================
+     DRIVER SELECTION
+====================================================== -->
 
-    <main class="driver-layout">
+<section
+    class="driver-selection-screen"
+    id="driverSelectionScreen"
+>
+
+    <div class="driver-selection-card">
+
+        <div class="driver-selection-icon">
+            🚚
+        </div>
+
+        <span class="eyebrow">
+            DAL DRIVER PORTAL
+        </span>
+
+        <h1>
+            Select Driver
+        </h1>
+
+        <p>
+            Choose your driver to load the assigned
+            vehicle and delivery mission.
+        </p>
+
+        <label for="driverSelect">
+            Driver
+        </label>
+
+        <select id="driverSelect">
+
+            <option value="">
+                Loading drivers...
+            </option>
+
+        </select>
+
+        <button
+            class="primary-button"
+            id="continueDriverButton"
+            type="button"
+            disabled
+        >
+            Continue
+        </button>
+
+        <div
+            class="driver-selection-message"
+            id="driverSelectionMessage"
+        >
+            Connecting to DAL backend...
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- =====================================================
+     MAIN APPLICATION
+====================================================== -->
+
+<main
+    class="driver-layout hidden"
+    id="driverApplication"
+>
+
+    <!-- =================================================
+         MAP
+    ================================================== -->
+
+    <section class="map-section">
+
+        <div id="map"></div>
+
+
+        <!-- GPS STATUS -->
+
+        <div class="map-overlay gps-overlay">
+
+            <div class="gps-icon">
+                ●
+            </div>
+
+            <div>
+                <strong id="gpsStatus">
+                    GPS Waiting
+                </strong>
+
+                <span id="gpsAccuracy">
+                    Waiting for location...
+                </span>
+            </div>
+
+        </div>
+
+
+        <!-- LIVE NAVIGATION HEADER -->
+
+        <div
+            class="map-overlay navigation-banner hidden"
+            id="navigationBanner"
+        >
+
+            <div class="navigation-direction">
+
+                <span class="direction-icon">
+                    ↑
+                </span>
+
+                <div>
+
+                    <small>
+                        NEXT ACTION
+                    </small>
+
+                    <strong id="nextInstruction">
+                        Continue on route
+                    </strong>
+
+                </div>
+
+            </div>
+
+            <div class="navigation-distance">
+
+                <strong id="nextDistance">
+                    --
+                </strong>
+
+                <span>
+                    ahead
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <!-- RECENTER -->
+
+        <button
+            class="map-control recenter-button"
+            id="recenterButton"
+            type="button"
+            title="Center on vehicle"
+        >
+            ⦿
+        </button>
+
+
+        <!-- LOCATION FOLLOW -->
+
+        <button
+            class="map-control follow-button active"
+            id="followButton"
+            type="button"
+            title="Follow vehicle"
+        >
+            ◎
+        </button>
+
+
+        <!-- MAP LEGEND -->
+
+        <div class="map-overlay map-legend">
+
+            <div class="legend-title">
+                Route Intelligence
+            </div>
+
+            <div class="legend-item">
+                <span class="legend-line safe"></span>
+                Safe
+            </div>
+
+            <div class="legend-item">
+                <span class="legend-line moderate"></span>
+                Moderate
+            </div>
+
+            <div class="legend-item">
+                <span class="legend-line dangerous"></span>
+                Dangerous
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- =================================================
+         DRIVER CONTROL PANEL
+    ================================================== -->
+
+    <aside class="control-panel">
+
 
         <!-- =================================================
-             MAP
+             DRIVER HEADER
         ================================================== -->
 
-        <section class="map-section">
+        <div class="panel-header">
 
-            <div id="map"></div>
+            <div>
+
+                <span class="eyebrow">
+                    DRIVER CONTROL
+                </span>
+
+                <h1>
+                    Delivery Mission
+                </h1>
+
+                <span
+                    class="driver-name-label"
+                    id="driverName"
+                >
+                    --
+                </span>
+
+            </div>
+
+            <div
+                class="driver-avatar"
+                id="driverAvatar"
+            >
+                DR
+            </div>
+
+        </div>
 
 
-            <!-- GPS STATUS -->
+        <!-- =================================================
+             DRIVER / ASSIGNMENT SUMMARY
+        ================================================== -->
 
-            <div class="map-overlay gps-overlay">
+        <section class="mission-summary-card">
 
-                <div class="gps-icon">
-                    ●
+            <div class="mission-summary-header">
+
+                <div>
+                    <span class="label">
+                        ACTIVE DRIVER
+                    </span>
+
+                    <strong id="missionDriverName">
+                        --
+                    </strong>
+                </div>
+
+                <span
+                    class="mission-status"
+                    id="missionStatus"
+                >
+                    READY
+                </span>
+
+            </div>
+
+            <div class="mission-summary-grid">
+
+                <div>
+                    <span>Vehicle</span>
+                    <strong id="missionVehicleNumber">
+                        --
+                    </strong>
                 </div>
 
                 <div>
-                    <strong id="gpsStatus">
-                        GPS Waiting
+                    <span>Max Load</span>
+                    <strong id="missionVehicleCapacity">
+                        --
                     </strong>
-
-                    <span id="gpsAccuracy">
-                        Waiting for location...
-                    </span>
                 </div>
 
-            </div>
-
-
-            <!-- LIVE NAVIGATION HEADER -->
-
-            <div
-                class="map-overlay navigation-banner hidden"
-                id="navigationBanner"
-            >
-
-                <div class="navigation-direction">
-                    <span class="direction-icon">↑</span>
-
-                    <div>
-                        <small>NEXT ACTION</small>
-                        <strong id="nextInstruction">
-                            Continue on route
-                        </strong>
-                    </div>
+                <div>
+                    <span>Shipment</span>
+                    <strong id="missionShipmentWeight">
+                        --
+                    </strong>
                 </div>
 
-                <div class="navigation-distance">
-                    <strong id="nextDistance">--</strong>
-                    <span>ahead</span>
-                </div>
-
-            </div>
-
-
-            <!-- RECENTER -->
-
-            <button
-                class="map-control recenter-button"
-                id="recenterButton"
-                title="Center on vehicle"
-            >
-                ⦿
-            </button>
-
-
-            <!-- LOCATION FOLLOW -->
-
-            <button
-                class="map-control follow-button active"
-                id="followButton"
-                title="Follow vehicle"
-            >
-                ◎
-            </button>
-
-
-            <!-- MAP LEGEND -->
-
-            <div class="map-overlay map-legend">
-
-                <div class="legend-title">
-                    Route Intelligence
-                </div>
-
-                <div class="legend-item">
-                    <span class="legend-line safe"></span>
-                    Safe
-                </div>
-
-                <div class="legend-item">
-                    <span class="legend-line moderate"></span>
-                    Moderate
-                </div>
-
-                <div class="legend-item">
-                    <span class="legend-line dangerous"></span>
-                    Dangerous
+                <div>
+                    <span>Priority</span>
+                    <strong id="missionPriority">
+                        --
+                    </strong>
                 </div>
 
             </div>
@@ -170,59 +365,122 @@
 
 
         <!-- =================================================
-             DRIVER CONTROL PANEL
+             VEHICLE CARD
         ================================================== -->
 
-        <aside class="control-panel">
+        <section class="vehicle-card">
 
+            <div class="vehicle-main">
 
-            <!-- =================================================
-                 DRIVER HEADER
-            ================================================== -->
-
-            <div class="panel-header">
+                <div class="vehicle-icon">
+                    🚚
+                </div>
 
                 <div>
 
-                    <span class="eyebrow">
-                        DRIVER CONTROL
+                    <span class="label">
+                        VEHICLE
                     </span>
 
-                    <h1>
-                        Delivery Mission
-                    </h1>
+                    <strong id="vehicleNumber">
+                        Loading...
+                    </strong>
 
-                </div>
-
-                <div
-                    class="driver-avatar"
-                    id="driverAvatar"
-                >
-                    DR
                 </div>
 
             </div>
 
+            <div class="vehicle-status">
 
-            <!-- =================================================
-                 VEHICLE CARD
-            ================================================== -->
+                <span class="status-dot"></span>
 
-            <section class="vehicle-card">
+                <span id="vehicleStatus">
+                    Checking
+                </span>
 
-                <div class="vehicle-main">
+            </div>
 
-                    <div class="vehicle-icon">
-                        🚚
+        </section>
+
+
+        <!-- =================================================
+             VEHICLE CAPACITY
+        ================================================== -->
+
+        <section class="vehicle-capacity-card">
+
+            <div>
+
+                <span class="label">
+                    MAX LOAD CAPACITY
+                </span>
+
+                <strong id="vehicleCapacity">
+                    --
+                </strong>
+
+            </div>
+
+            <div>
+
+                <span class="label">
+                    DRIVER
+                </span>
+
+                <strong id="vehicleDriver">
+                    --
+                </strong>
+
+            </div>
+
+        </section>
+
+
+        <!-- =================================================
+             ACTIVE SHIPMENT
+        ================================================== -->
+
+        <section class="shipment-card">
+
+            <div class="shipment-top">
+
+                <div>
+
+                    <span class="eyebrow">
+                        ACTIVE SHIPMENT
+                    </span>
+
+                    <h2 id="shipmentId">
+                        Loading...
+                    </h2>
+
+                </div>
+
+                <span
+                    class="priority-badge critical"
+                    id="priorityBadge"
+                >
+                    --
+                </span>
+
+            </div>
+
+
+            <div class="shipment-route">
+
+                <div class="location-row">
+
+                    <div class="location-marker pickup">
+                        A
                     </div>
 
                     <div>
 
                         <span class="label">
-                            VEHICLE
+                            PICKUP
                         </span>
 
-                        <strong id="vehicleNumber">
+                        <strong id="originName">
                             Loading...
                         </strong>
 
@@ -230,542 +488,551 @@
 
                 </div>
 
-                <div class="vehicle-status">
-                    <span class="status-dot"></span>
-                    <span id="vehicleStatus">
-                        Checking
-                    </span>
-                </div>
 
-            </section>
+                <div class="route-connector"></div>
 
 
-            <!-- =================================================
-                 ACTIVE SHIPMENT
-            ================================================== -->
+                <div class="location-row">
 
-            <section class="shipment-card">
-
-                <div class="shipment-top">
+                    <div class="location-marker destination">
+                        B
+                    </div>
 
                     <div>
 
-                        <span class="eyebrow">
-                            ACTIVE SHIPMENT
+                        <span class="label">
+                            DESTINATION
                         </span>
 
-                        <h2 id="shipmentId">
+                        <strong id="destinationName">
                             Loading...
-                        </h2>
-
-                    </div>
-
-                    <span
-                        class="priority-badge critical"
-                        id="priorityBadge"
-                    >
-                        --
-                    </span>
-
-                </div>
-
-
-                <div class="shipment-route">
-
-                    <div class="location-row">
-
-                        <div class="location-marker pickup">
-                            A
-                        </div>
-
-                        <div>
-
-                            <span class="label">
-                                PICKUP
-                            </span>
-
-                            <strong id="originName">
-                                Loading...
-                            </strong>
-
-                        </div>
-
-                    </div>
-
-
-                    <div class="route-connector"></div>
-
-
-                    <div class="location-row">
-
-                        <div class="location-marker destination">
-                            B
-                        </div>
-
-                        <div>
-
-                            <span class="label">
-                                DESTINATION
-                            </span>
-
-                            <strong id="destinationName">
-                                Loading...
-                            </strong>
-
-                        </div>
+                        </strong>
 
                     </div>
 
                 </div>
 
-
-                <div class="shipment-meta">
-
-                    <div>
-                        <span>Category</span>
-                        <strong id="shipmentCategory">
-                            --
-                        </strong>
-                    </div>
-
-                    <div>
-                        <span>Weight</span>
-                        <strong id="shipmentWeight">
-                            --
-                        </strong>
-                    </div>
-
-                    <div>
-                        <span>Status</span>
-                        <strong id="shipmentStatus">
-                            --
-                        </strong>
-                    </div>
-
-                </div>
-
-            </section>
+            </div>
 
 
-            <!-- =================================================
-                 LIVE JOURNEY STATS
-            ================================================== -->
-
-            <section class="journey-stats">
-
-                <div class="journey-stat">
-
-                    <span class="stat-icon">
-                        ⏱
-                    </span>
-
-                    <div>
-                        <span>ETA</span>
-                        <strong id="etaValue">
-                            --
-                        </strong>
-                    </div>
-
-                </div>
-
-
-                <div class="journey-stat">
-
-                    <span class="stat-icon">
-                        ↗
-                    </span>
-
-                    <div>
-                        <span>Distance</span>
-                        <strong id="distanceValue">
-                            --
-                        </strong>
-                    </div>
-
-                </div>
-
-
-                <div class="journey-stat">
-
-                    <span class="stat-icon">
-                        ◉
-                    </span>
-
-                    <div>
-                        <span>Speed</span>
-                        <strong id="speedValue">
-                            --
-                        </strong>
-                    </div>
-
-                </div>
-
-            </section>
-
-
-            <!-- =================================================
-                 AI RISK STATUS
-            ================================================== -->
-
-            <section class="risk-card">
-
-                <div class="risk-header">
-
-                    <div>
-
-                        <span class="eyebrow">
-                            AI JOURNEY RISK
-                        </span>
-
-                        <strong id="riskLevel">
-                            ANALYZING
-                        </strong>
-
-                    </div>
-
-                    <div
-                        class="risk-score"
-                        id="riskScore"
-                    >
-                        --
-                    </div>
-
-                </div>
-
-
-                <div class="risk-progress">
-
-                    <div
-                        class="risk-progress-fill"
-                        id="riskProgress"
-                    ></div>
-
-                </div>
-
-
-                <div class="risk-details">
-
-                    <div>
-                        <span>Weather</span>
-                        <strong id="weatherRisk">
-                            --
-                        </strong>
-                    </div>
-
-                    <div>
-                        <span>Traffic</span>
-                        <strong id="trafficRisk">
-                            --
-                        </strong>
-                    </div>
-
-                    <div>
-                        <span>Road</span>
-                        <strong id="roadRisk">
-                            --
-                        </strong>
-                    </div>
-
-                </div>
-
-            </section>
-
-
-            <!-- =================================================
-                 LIVE ALERT
-            ================================================== -->
-
-            <section
-                class="alert-card hidden"
-                id="alertCard"
-            >
-
-                <div class="alert-icon">
-                    ⚠
-                </div>
+            <div class="shipment-meta">
 
                 <div>
-
-                    <strong id="alertTitle">
-                        Route Alert
-                    </strong>
-
-                    <p id="alertMessage">
-                        --
-                    </p>
-
-                </div>
-
-            </section>
-
-
-            <!-- =================================================
-                 ROUTE OPTIONS
-            ================================================== -->
-
-            <section class="routes-section">
-
-                <div class="section-heading">
-
-                    <div>
-
-                        <span class="eyebrow">
-                            ROUTE INTELLIGENCE
-                        </span>
-
-                        <h3>
-                            Choose your route
-                        </h3>
-
-                    </div>
-
-                    <span
-                        class="live-label"
-                        id="routeLiveLabel"
-                    >
-                        LIVE
-                    </span>
-
-                </div>
-
-
-                <div
-                    class="route-list"
-                    id="routeList"
-                >
-
-                    <!-- Routes inserted by driver.js -->
-
-                    <div class="loading-state">
-
-                        <div class="spinner"></div>
-
-                        <span>
-                            Calculating safest routes...
-                        </span>
-
-                    </div>
-
-                </div>
-
-            </section>
-
-
-            <!-- =================================================
-                 NAVIGATION ACTIONS
-            ================================================== -->
-
-            <div class="action-area">
-
-                <button
-                    class="primary-button"
-                    id="startNavigationButton"
-                    disabled
-                >
 
                     <span>
-                        ▶
+                        Category
                     </span>
 
-                    <strong>
-                        Start Navigation
+                    <strong id="shipmentCategory">
+                        --
                     </strong>
 
-                </button>
+                </div>
+
+                <div>
+
+                    <span>
+                        Weight
+                    </span>
+
+                    <strong id="shipmentWeight">
+                        --
+                    </strong>
+
+                </div>
+
+                <div>
+
+                    <span>
+                        Status
+                    </span>
+
+                    <strong id="shipmentStatus">
+                        --
+                    </strong>
+
+                </div>
+
+            </div>
+
+        </section>
 
 
-                <button
-                    class="secondary-button hidden"
-                    id="stopNavigationButton"
-                >
+        <!-- =================================================
+             LIVE JOURNEY STATS
+        ================================================== -->
 
-                    Stop Navigation
+        <section class="journey-stats">
 
-                </button>
+            <div class="journey-stat">
 
+                <span class="stat-icon">
+                    ⏱
+                </span>
 
-                <button
-                    class="deliver-button hidden"
-                    id="deliverButton"
-                >
+                <div>
 
-                    ✓ Mark Delivered
+                    <span>
+                        ETA
+                    </span>
 
-                </button>
+                    <strong id="etaValue">
+                        --
+                    </strong>
+
+                </div>
 
             </div>
 
 
-            <!-- =================================================
-                 FOOTER
-            ================================================== -->
+            <div class="journey-stat">
 
-            <footer class="driver-footer">
-
-                <span>
-                    DAL Intelligence Engine
+                <span class="stat-icon">
+                    ↗
                 </span>
 
-                <span>
-                    •
-                </span>
+                <div>
 
-                <span id="lastUpdated">
-                    Waiting for data
-                </span>
+                    <span>
+                        Distance
+                    </span>
 
-            </footer>
+                    <strong id="distanceValue">
+                        --
+                    </strong>
 
-        </aside>
+                </div>
 
-    </main>
-
-
-    <!-- =====================================================
-         REROUTE MODAL
-    ====================================================== -->
-
-    <div
-        class="modal-backdrop hidden"
-        id="rerouteModal"
-    >
-
-        <div class="reroute-modal">
-
-            <div class="reroute-icon">
-                ⚠️
             </div>
 
-            <span class="eyebrow">
-                SAFETY ALERT
+
+            <div class="journey-stat">
+
+                <span class="stat-icon">
+                    ◉
+                </span>
+
+                <div>
+
+                    <span>
+                        Speed
+                    </span>
+
+                    <strong id="speedValue">
+                        --
+                    </strong>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =================================================
+             AI RISK STATUS
+        ================================================== -->
+
+        <section class="risk-card">
+
+            <div class="risk-header">
+
+                <div>
+
+                    <span class="eyebrow">
+                        AI JOURNEY RISK
+                    </span>
+
+                    <strong id="riskLevel">
+                        ANALYZING
+                    </strong>
+
+                </div>
+
+                <div
+                    class="risk-score"
+                    id="riskScore"
+                >
+                    --
+                </div>
+
+            </div>
+
+
+            <div class="risk-progress">
+
+                <div
+                    class="risk-progress-fill"
+                    id="riskProgress"
+                ></div>
+
+            </div>
+
+
+            <div class="risk-details">
+
+                <div>
+
+                    <span>
+                        Weather
+                    </span>
+
+                    <strong id="weatherRisk">
+                        --
+                    </strong>
+
+                </div>
+
+                <div>
+
+                    <span>
+                        Traffic
+                    </span>
+
+                    <strong id="trafficRisk">
+                        --
+                    </strong>
+
+                </div>
+
+                <div>
+
+                    <span>
+                        Road
+                    </span>
+
+                    <strong id="roadRisk">
+                        --
+                    </strong>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =================================================
+             LIVE ALERT
+        ================================================== -->
+
+        <section
+            class="alert-card hidden"
+            id="alertCard"
+        >
+
+            <div class="alert-icon">
+                ⚠
+            </div>
+
+            <div>
+
+                <strong id="alertTitle">
+                    Route Alert
+                </strong>
+
+                <p id="alertMessage">
+                    --
+                </p>
+
+            </div>
+
+        </section>
+
+
+        <!-- =================================================
+             ROUTE OPTIONS
+        ================================================== -->
+
+        <section class="routes-section">
+
+            <div class="section-heading">
+
+                <div>
+
+                    <span class="eyebrow">
+                        ROUTE INTELLIGENCE
+                    </span>
+
+                    <h3>
+                        Choose your route
+                    </h3>
+
+                </div>
+
+                <span
+                    class="live-label"
+                    id="routeLiveLabel"
+                >
+                    LIVE
+                </span>
+
+            </div>
+
+
+            <div
+                class="route-list"
+                id="routeList"
+            >
+
+                <div class="loading-state">
+
+                    <div class="spinner"></div>
+
+                    <span>
+                        Calculating safest routes...
+                    </span>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =================================================
+             NAVIGATION ACTIONS
+        ================================================== -->
+
+        <div class="action-area">
+
+            <button
+                class="primary-button"
+                id="startNavigationButton"
+                type="button"
+                disabled
+            >
+
+                <span>
+                    ▶
+                </span>
+
+                <strong>
+                    Start Navigation
+                </strong>
+
+            </button>
+
+
+            <button
+                class="secondary-button hidden"
+                id="stopNavigationButton"
+                type="button"
+            >
+                Stop Navigation
+            </button>
+
+
+            <button
+                class="deliver-button hidden"
+                id="deliverButton"
+                type="button"
+            >
+                ✓ Mark Delivered
+            </button>
+
+        </div>
+
+
+        <!-- =================================================
+             FOOTER
+        ================================================== -->
+
+        <footer class="driver-footer">
+
+            <span>
+                DAL Intelligence Engine
             </span>
 
-            <h2>
-                Route conditions changed
-            </h2>
+            <span>
+                •
+            </span>
 
-            <p id="rerouteMessage">
-                DAL detected increased risk on your current route.
-            </p>
+            <span id="lastUpdated">
+                Waiting for data
+            </span>
 
-            <div class="reroute-route">
+        </footer>
 
-                <div>
-                    <span>Current route</span>
-                    <strong id="currentRouteRisk">
-                        --
-                    </strong>
-                </div>
+    </aside>
 
-                <div class="arrow">
-                    →
-                </div>
+</main>
 
-                <div>
-                    <span>Recommended</span>
-                    <strong id="recommendedRouteRisk">
-                        --
-                    </strong>
-                </div>
+
+<!-- =====================================================
+     REROUTE MODAL
+====================================================== -->
+
+<div
+    class="modal-backdrop hidden"
+    id="rerouteModal"
+>
+
+    <div class="reroute-modal">
+
+        <div class="reroute-icon">
+            ⚠️
+        </div>
+
+        <span class="eyebrow">
+            SAFETY ALERT
+        </span>
+
+        <h2>
+            Route conditions changed
+        </h2>
+
+        <p id="rerouteMessage">
+            DAL detected increased risk on your current route.
+        </p>
+
+        <div class="reroute-route">
+
+            <div>
+
+                <span>
+                    Current route
+                </span>
+
+                <strong id="currentRouteRisk">
+                    --
+                </strong>
 
             </div>
 
-            <div class="modal-actions">
+            <div class="arrow">
+                →
+            </div>
 
-                <button
-                    class="secondary-button"
-                    id="keepRouteButton"
-                >
-                    Keep Current Route
-                </button>
+            <div>
 
-                <button
-                    class="primary-button"
-                    id="acceptRerouteButton"
-                >
-                    Accept Safer Route
-                </button>
+                <span>
+                    Recommended
+                </span>
+
+                <strong id="recommendedRouteRisk">
+                    --
+                </strong>
 
             </div>
 
         </div>
 
-    </div>
+        <div class="modal-actions">
 
-
-    <!-- =====================================================
-         DELIVERY SUCCESS MODAL
-    ====================================================== -->
-
-    <div
-        class="modal-backdrop hidden"
-        id="deliveryModal"
-    >
-
-        <div class="success-modal">
-
-            <div class="success-icon">
-                ✓
-            </div>
-
-            <span class="eyebrow">
-                DELIVERY COMPLETE
-            </span>
-
-            <h2>
-                Shipment Delivered
-            </h2>
-
-            <p>
-                The delivery has been successfully recorded.
-            </p>
-
-            <div class="delivery-summary">
-
-                <div>
-                    <span>Shipment</span>
-                    <strong id="deliveredShipment">
-                        --
-                    </strong>
-                </div>
-
-                <div>
-                    <span>Vehicle</span>
-                    <strong id="deliveredVehicle">
-                        --
-                    </strong>
-                </div>
-
-                <div>
-                    <span>Status</span>
-                    <strong>
-                        Delivered ✓
-                    </strong>
-                </div>
-
-            </div>
+            <button
+                class="secondary-button"
+                id="keepRouteButton"
+                type="button"
+            >
+                Keep Current Route
+            </button>
 
             <button
                 class="primary-button"
-                id="closeDeliveryButton"
+                id="acceptRerouteButton"
+                type="button"
             >
-                Done
+                Accept Safer Route
             </button>
 
         </div>
 
     </div>
 
+</div>
 
-    <!-- =====================================================
-         JAVASCRIPT
-    ====================================================== -->
 
-    <script
-        src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-    ></script>
+<!-- =====================================================
+     DELIVERY SUCCESS MODAL
+====================================================== -->
 
-    <script src="driver.js"></script>
+<div
+    class="modal-backdrop hidden"
+    id="deliveryModal"
+>
+
+    <div class="success-modal">
+
+        <div class="success-icon">
+            ✓
+        </div>
+
+        <span class="eyebrow">
+            DELIVERY COMPLETE
+        </span>
+
+        <h2>
+            Shipment Delivered
+        </h2>
+
+        <p>
+            The delivery has been successfully recorded.
+        </p>
+
+        <div class="delivery-summary">
+
+            <div>
+
+                <span>
+                    Shipment
+                </span>
+
+                <strong id="deliveredShipment">
+                    --
+                </strong>
+
+            </div>
+
+            <div>
+
+                <span>
+                    Vehicle
+                </span>
+
+                <strong id="deliveredVehicle">
+                    --
+                </strong>
+
+            </div>
+
+            <div>
+
+                <span>
+                    Status
+                </span>
+
+                <strong>
+                    Delivered ✓
+                </strong>
+
+            </div>
+
+        </div>
+
+        <button
+            class="primary-button"
+            id="closeDeliveryButton"
+            type="button"
+        >
+            Done
+        </button>
+
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     JAVASCRIPT
+====================================================== -->
+
+<script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+></script>
+
+<script src="driver.js"></script>
+```
 
 </div>
 

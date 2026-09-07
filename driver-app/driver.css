@@ -1,6 +1,3 @@
-/* =========================================================
-   DAL DRIVER — PROFESSIONAL NAVIGATION UI
-   ========================================================= */
 
 :root {
     --bg: #070b14;
@@ -2031,5 +2028,171 @@ button:disabled {
         scroll-behavior: auto !important;
 
         transition-duration: 0.01ms !important;
+    }
+}
+
+
+/* =========================================================
+   DRIVER SELECTION — PROFESSIONAL ENTRY SCREEN
+   ========================================================= */
+
+#driverSelectionScreen {
+    position: fixed;
+    inset: 0;
+    z-index: 9000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background:
+        radial-gradient(circle at 50% 0%, rgba(59, 130, 246, 0.14), transparent 38%),
+        linear-gradient(145deg, #060a12, #0b1220 55%, #070c15);
+}
+
+#driverSelectionScreen.hidden {
+    display: none !important;
+}
+
+.driver-selection-card {
+    width: min(460px, 100%);
+    padding: 30px;
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    border-radius: 22px;
+    background:
+        linear-gradient(145deg, rgba(20, 31, 50, 0.97), rgba(9, 15, 26, 0.98));
+    box-shadow: 0 30px 90px rgba(0, 0, 0, 0.48);
+    text-align: center;
+}
+
+.driver-selection-icon {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 18px;
+    color: #bfdbfe;
+    background: rgba(59, 130, 246, 0.12);
+    border: 1px solid rgba(59, 130, 246, 0.22);
+    font-size: 27px;
+    box-shadow: 0 12px 35px rgba(37, 99, 235, 0.12);
+}
+
+.driver-selection-card .eyebrow {
+    margin-bottom: 7px;
+}
+
+.driver-selection-card h1 {
+    font-size: 23px;
+    letter-spacing: -0.5px;
+}
+
+.driver-selection-card p {
+    margin-top: 8px;
+    color: var(--muted);
+    font-size: 10px;
+    line-height: 1.55;
+}
+
+#driverSelect {
+    width: 100%;
+    min-height: 46px;
+    margin-top: 20px;
+    padding: 0 13px;
+    border: 1px solid var(--border-strong);
+    border-radius: 11px;
+    outline: none;
+    color: var(--text);
+    background: #101a2b;
+    appearance: auto;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+#driverSelect:focus {
+    border-color: rgba(59, 130, 246, 0.60);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.10);
+}
+
+#continueDriverButton {
+    margin-top: 10px;
+}
+
+#driverSelectionMessage {
+    min-height: 15px;
+    margin-top: 10px;
+    color: #fca5a5;
+    font-size: 9px;
+}
+
+
+/* =========================================================
+   MISSION SUMMARY — DRIVER + VEHICLE SNAPSHOT
+   ========================================================= */
+
+#missionDriverName,
+#missionVehicleNumber,
+#missionVehicleCapacity,
+#missionShipmentWeight,
+#missionPriority {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#missionStatus {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 21px;
+    padding: 3px 8px;
+    border-radius: 999px;
+    color: #bbf7d0;
+    background: rgba(34, 197, 94, 0.09);
+    border: 1px solid rgba(34, 197, 94, 0.16);
+    font-size: 7px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+
+/* =========================================================
+   BETTER VEHICLE / DRIVER STATUS STATES
+   ========================================================= */
+
+.vehicle-status.busy .status-dot {
+    background: var(--yellow);
+    box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.08);
+}
+
+.vehicle-status.error .status-dot {
+    background: var(--red);
+    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.08);
+}
+
+
+/* =========================================================
+   MOBILE DRIVER SELECTION
+   ========================================================= */
+
+@media (max-width: 480px) {
+    #driverSelectionScreen {
+        padding: 15px;
+    }
+
+    .driver-selection-card {
+        padding: 23px 18px;
+        border-radius: 18px;
+    }
+
+    .driver-selection-card h1 {
+        font-size: 20px;
+    }
+
+    .driver-selection-icon {
+        width: 56px;
+        height: 56px;
+        margin-bottom: 14px;
     }
 }

@@ -436,13 +436,33 @@ def choose_traffic_route(routes, risk_score, shipment_priority):
 
 def compute_intelligence(shipment, vehicle, telemetry):
     origin_lat = safe_float(
-        telemetry["latitude"] if telemetry and telemetry["latitude"] is not None
-        else (vehicle.current_lat if vehicle else shipment.origin_lat)
+    telemetry["latitude"]
+    if telemetry and telemetry["latitude"] is not None
+    else (
+        vehicle.current_lat
+        if vehicle and vehicle.current_lat is not None
+        else shipment.origin_lat
     )
+)
+
     origin_lon = safe_float(
-        telemetry["longitude"] if telemetry and telemetry["longitude"] is not None
-        else (vehicle.current_lon if vehicle else shipment.origin_lon)
+    telemetry["longitude"]
+    if telemetry and telemetry["longitude"] is not None
+    else (
+        vehicle.current_lon
+        if vehicle and vehicle.current_lon is not None
+        else shipment.origin_lon
     )
+)
+
+    print("DEBUG ORIGIN:")
+    print("telemetry =", telemetry)
+    print("vehicle current_lat =", vehicle.current_lat if vehicle else None)
+    print("vehicle current_lon =", vehicle.current_lon if vehicle else None)
+    print("shipment origin_lat =", shipment.origin_lat)
+    print("shipment origin_lon =", shipment.origin_lon)
+    print("FINAL origin =", origin_lat, origin_lon)
+
     destination_lat = safe_float(shipment.destination_lat)
     destination_lon = safe_float(shipment.destination_lon)
 
