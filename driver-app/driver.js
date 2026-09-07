@@ -3267,263 +3267,260 @@ function updateJourneyStats(
 /* =========================================================
 RISK DISPLAY
 ========================================================= */
-
 function updateRisk(intelligence) {
   if (!intelligence) {
+    setText("riskLevel", "ANALYZING");
+    setText("riskScore", "--");
+    setText("weatherRisk", "--");
+    setText("trafficRisk", "--");
+    setText("roadRisk", "--");
+
+    const progress = $("riskProgress");
+    if (progress) {
+      progress.style.width = "0%";
+    }
+
     return;
   }
-
-  /*
-   * Main AI risk
-   * Backend currently returns:
-   * risk_percent
-   * risk_score
-   * risk_level
-   */
-
-  const weather =
-    intelligence.weather || {};
-
-  const weatherRisk =
-    weather.risk || {};
-
-  const selectedRoute =
-    intelligence.selected_route ||
-    intelligence.selectedRoute ||
-    state.selectedRoute ||
-    {};
 
   const rawRisk =
     intelligence.risk_percent ??
     intelligence.risk_percentage ??
     intelligence.risk_score ??
     intelligence.disruption_risk ??
-    intelligence.risk ??
-    selectedRoute.risk_percent ??
-    selectedRoute.risk_score ??
-    selectedRoute.risk;
+    intelligence.risk;
 
-  const risk =
-    normalizeRisk(rawRisk);
+  if (
+    rawRisk === null ||
+    rawRisk === undefined ||
+    rawRisk === ""
+  ) {
+    setText("riskLevel", "ANALYZING");
+    setText("riskScore", "--");
+  } else {
+    const risk = normalizeRisk(rawRisk);
+    const percent = Math.round(risk * 100);
 
-  const percent =
-    Math.round(risk * 100);
-
-  const level =
-    normalizeRiskLevel(
+    const level =
       intelligence.risk_level ??
       intelligence.riskLevel ??
-      weatherRisk.risk_level ??
-      risk
-    );
-
-  /*
-   * AI RISK SCORE
-   */
-
-  setText(
-    "riskScore",
-    `${percent}%`
-  );
-
-  /*
-   * RISK LEVEL
-   */
-
-  setText(
-    "riskLevel",
-    riskLabel(level)
-  );
-
-  const riskScore =
-    $("riskScore");
-
-  if (riskScore) {
-    riskScore.classList.remove(
-      "safe",
-      "moderate",
-      "dangerous"
-    );
-
-    riskScore.classList.add(
-      level
-    );
-  }
-
-  const riskLevel =
-    $("riskLevel");
-
-  if (riskLevel) {
-    riskLevel.classList.remove(
-      "safe",
-      "moderate",
-      "dangerous"
-    );
-
-    riskLevel.classList.add(
-      level
-    );
-  }
-
-  /*
-   * RISK PROGRESS BAR
-   */
-
-  const riskProgress =
-    $("riskProgress");
-
-  if (riskProgress) {
-    riskProgress.style.width =
-      `${percent}%`;
-
-    riskProgress.className =
-      `risk-progress-fill ${level}`;
-  }
-
-  /*
-   * WEATHER RISK
-   */
-
-  const weatherRiskPercent =
-    weatherRisk.risk_percent ??
-    weatherRisk.risk_score ??
-    weather.risk_percent ??
-    weather.risk_score;
-
-  if (
-    weatherRiskPercent !== undefined &&
-    weatherRiskPercent !== null
-  ) {
-    const weatherPercent =
-      Math.round(
-        normalizeRisk(
-          weatherRiskPercent
-        ) * 100
+      (
+        risk >= 0.75
+          ? "critical"
+          : risk >= 0.60
+            ? "high"
+            : risk >= 0.40
+              ? "moderate"
+              : "low"
       );
 
-    const weatherStatus =
-      weather.status === "FALLBACK"
-        ? `${weatherPercent}% · Fallback`
-        : `${weatherPercent}%`;
+    const normalizedLevel =
+      String(level)
+        .toLowerCase()
+        .replace(/[_\s-]+/g, "");
+
+    let displayLevel = "LOW";
+
+    if (
+      normalizedLevel === "critical" ||
+      normalizedLevel === "veryhigh"
+    ) {
+      displayLevel = "CRITICAL";
+    } else if (
+      normalizedLevel === "high"
+    ) {
+      displayLevel = "HIGH";
+    } else if (
+      normalizedLevel === "moderate" ||
+      normalizedLevel === "medium"
+    ) {
+      displayLevel = "MODERATE";
+    } else if (
+      normalizedLevel === "safe" ||
+      normalizedLevel === "low"
+    ) {
+      displayLevel = "LOW";
+    }
 
     setText(
-      "weatherRisk",
-      weatherStatus
+      "riskLevel",
+      `${displayLevel} RISK`
     );
-  } else {
+
     setText(
-      "weatherRisk",
-      "Unavailable"
+      "riskScore",
+      `${percent}%`
+    );
+
+    const progress =
+      $("riskProgress");
+
+    if (progress) {
+      progress.style.width =
+        `${percent}%`;
+
+      progress.style.background =
+        risk >= 0.60
+          ? "#ef4444"
+          : risk >= 0.40
+            ? "#f59e0b"
+            : "#22c55e";
+    }
+
+    updateMissionRisk(
+      percent,
+      normalizedLevel
     );
   }
 
-  /*
-   * TRAFFIC
-   */
 
-  const trafficAvailable =
-    selectedRoute.traffic_available ??
-    intelligence.traffic_available;
+  /* =========================================================
+     WEATHER
+  ========================================================= */
 
-  const trafficLevel =
-    selectedRoute.traffic_level ??
-    intelligence.traffic_level;
+  let weatherValue =
+    intelligence.weather_risk ??
+    intelligence.weather_score;
 
   if (
-    trafficAvailable === false ||
-    trafficLevel === "unknown"
+    weatherValue === undefined &&
+    intelligence.weather
+  ) {
+    if (
+      typeof intelligence.weather === "object"
+    ) {
+      weatherValue =
+        intelligence.weather.risk ??
+        intelligence.weather.risk_percent ??
+        intelligence.weather.score ??
+        intelligence.weather.risk_score;
+    } else {
+      weatherValue =
+        intelligence.weather;
+    }
+  }
+
+  if (
+    weatherValue === undefined &&
+    intelligence.weather_condition
+  ) {
+    weatherValue =
+      intelligence.weather_condition;
+  }
+
+  setText(
+    "weatherRisk",
+    formatRiskValue(weatherValue)
+  );
+
+
+  /* =========================================================
+     TRAFFIC
+  ========================================================= */
+
+  let trafficValue =
+    intelligence.traffic_risk ??
+    intelligence.traffic_score;
+
+  if (
+    trafficValue === undefined &&
+    intelligence.traffic
+  ) {
+    if (
+      typeof intelligence.traffic === "object"
+    ) {
+      trafficValue =
+        intelligence.traffic.risk ??
+        intelligence.traffic.risk_percent ??
+        intelligence.traffic.score ??
+        intelligence.traffic.level;
+    } else {
+      trafficValue =
+        intelligence.traffic;
+    }
+  }
+
+  if (
+    intelligence.traffic_available === false ||
+    intelligence.traffic_level === "unknown"
   ) {
     setText(
       "trafficRisk",
       "Unavailable"
     );
-  } else if (trafficLevel) {
+  } else {
     setText(
       "trafficRisk",
-      formatStatus(
-        trafficLevel
-      )
+      formatRiskValue(trafficValue)
     );
-  } else {
-    const trafficScore =
-      selectedRoute.traffic_score ??
-      selectedRoute.traffic;
+  }
+
+
+  /* =========================================================
+     ROAD ACCESSIBILITY
+  ========================================================= */
+
+  let accessibility =
+    intelligence.road_accessibility_percent ??
+    intelligence.accessibility_percent;
+
+  if (
+    accessibility === undefined &&
+    intelligence.selected_route
+  ) {
+    accessibility =
+      intelligence.selected_route.accessibility_percent ??
+      intelligence.selected_route.road_accessibility_percent ??
+      intelligence.selected_route.accessibility_score ??
+      intelligence.selected_route.accessibility;
+  }
+
+  if (
+    accessibility === undefined &&
+    state.selectedRoute
+  ) {
+    accessibility =
+      state.selectedRoute.accessibility_percent ??
+      state.selectedRoute.road_accessibility_percent ??
+      state.selectedRoute.accessibility_score ??
+      state.selectedRoute.accessibility;
+  }
+
+  if (
+    accessibility !== undefined &&
+    accessibility !== null
+  ) {
+    let value = Number(accessibility);
 
     if (
-      trafficScore !== undefined &&
-      trafficScore !== null
+      Number.isFinite(value)
     ) {
-      const trafficPercent =
-        Math.round(
-          normalizeRisk(
-            trafficScore
-          ) * 100
-        );
+      if (value >= 0 && value <= 1) {
+        value *= 100;
+      }
+
+      value = Math.max(
+        0,
+        Math.min(100, value)
+      );
 
       setText(
-        "trafficRisk",
-        `${trafficPercent}%`
+        "roadRisk",
+        `${Math.round(value)}% Accessible`
       );
     } else {
       setText(
-        "trafficRisk",
-        "Unavailable"
+        "roadRisk",
+        String(accessibility)
       );
     }
-  }
-
-  /*
-   * ROAD ACCESSIBILITY
-   */
-
-  const roadAccessibility =
-    intelligence.road_accessibility_percent ??
-    selectedRoute.accessibility_percent ??
-    selectedRoute.accessibility_score ??
-    selectedRoute.accessibility;
-
-  const roadCondition =
-    intelligence.route_condition ??
-    selectedRoute.condition;
-
-  if (
-    roadAccessibility !== undefined &&
-    roadAccessibility !== null &&
-    Number(roadAccessibility) > 0
-  ) {
-    let accessibility =
-      Number(roadAccessibility);
-
-    if (accessibility <= 1) {
-      accessibility *= 100;
-    }
-
-    accessibility =
-      Math.round(
-        clamp(
-          accessibility,
-          0,
-          100
-        )
-      );
-
-    setText(
-      "roadRisk",
-      `${accessibility}% Accessible`
-    );
-  } else if (roadCondition) {
-    setText(
-      "roadRisk",
-      formatStatus(
-        roadCondition
-      )
-    );
   } else {
     setText(
       "roadRisk",
-      "Unavailable"
+      "--"
     );
   }
+}
 
   /*
    * MISSION RISK
