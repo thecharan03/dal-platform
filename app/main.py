@@ -250,56 +250,130 @@ def set_operational_status(db, shipment_id, status):
 
 
 def fetch_live_weather(lat, lon):
-    response = requests.get(
-        "https://api.open-meteo.com/v1/forecast",
-        params={
-            "latitude": lat,
-            "longitude": lon,
-            "current": "temperature_2m,relative_humidity_2m,rain,precipitation,wind_speed_10m,weather_code",
-            "forecast_days": 1,
-            "timezone": "auto",
-        },
-        timeout=8,
-    )
-    response.raise_for_status()
-    current = response.json().get("current", {})
-    rainfall = safe_float(current.get("rain", current.get("precipitation")))
-    wind = safe_float(current.get("wind_speed_10m"))
-    temperature = safe_float(current.get("temperature_2m"))
-    humidity = safe_float(current.get("relative_humidity_2m"))
-    flood = min(1, max(0, rainfall / 45 * 0.65 + humidity / 100 * 0.2))
-    landslide = min(1, max(0, rainfall / 50 * 0.65 + wind / 90 * 0.2))
-    if disruption_predictor:
-        prediction = disruption_predictor.predict(
-            rainfall_mm=rainfall,
-            temperature_c=temperature,
-            wind_speed_kmh=wind,
-            flood_risk_score=flood,
-            landslide_risk_score=landslide,
+    try:
+        response = requests.get(
+            "https://api.open-meteo.com/v1/forecast",
+            params={
+                "latitude": lat,
+                "longitude": lon,
+                "current": "temperature_2m,relative_humidity_2m,rain,precipitation,wind_speed_10m,weather_code",
+                "forecast_days": 1,
+                "timezone": "auto",
+            },
+            timeout=8,
         )
-    else:
-        hazard = flood * 0.45 + landslide * 0.55
-        prediction = {
-            "risk_score": hazard,
-            "risk_percent": round(hazard * 100),
-            "risk_level": "MODEL UNAVAILABLE",
-            "ml_probability": hazard,
-            "disrupted": hazard >= 0.6,
+
+        response.raise_for_status()
+
+        current = response.json().get("current", {})
+
+        rainfall = safe_float(
+            current.get("rain", current.get("precipitation"))
+        )
+        wind = safe_float(
+            current.get("wind_speed_10m")
+        )
+        temperature = safe_float(
+            current.get("temperature_2m")
+        )
+        humidity = safe_float(
+            current.get("relative_humidity_2m")
+        )
+
+        flood = min(
+            1,
+            max(
+                0,
+                rainfall / 45 * 0.65
+                + humidity / 100 * 0.2
+            )
+        )
+
+        landslide = min(
+            1,
+            max(
+                0,
+                rainfall / 50 * 0.65
+                + wind / 90 * 0.2
+            )
+        )
+
+        if disruption_predictor:
+            prediction = disruption_predictor.predict(
+                rainfall_mm=rainfall,
+                temperature_c=temperature,
+                wind_speed_kmh=wind,
+                flood_risk_score=flood,
+                landslide_risk_score=landslide,
+            )
+        else:
+            hazard = flood * 0.45 + landslide * 0.55
+
+            prediction = {
+                "risk_score": hazard,
+                "risk_percent": round(hazard * 100),
+                "risk_level": "MODEL UNAVAILABLE",
+                "ml_probability": hazard,
+                "disrupted": hazard >= 0.6,
+            }
+
+        return {
+            "status": "LIVE",
+            "source": "Open-Meteo",
+            "temperature_c": temperature,
+            "rainfall_mm": rainfall,
+            "wind_speed_kmh": wind,
+            "humidity_percent": humidity,
+            "weather_code": current.get("weather_code"),
+            "flood_risk_score": round(flood, 3),
+            "landslide_risk_score": round(landslide, 3),
+            "risk": prediction,
         }
-    return {
-        "status": "LIVE",
-        "source": "Open-Meteo",
-        "temperature_c": temperature,
-        "rainfall_mm": rainfall,
-        "wind_speed_kmh": wind,
-        "humidity_percent": humidity,
-        "weather_code": current.get("weather_code"),
-        "flood_risk_score": round(flood, 3),
-        "landslide_risk_score": round(landslide, 3),
-        "risk": prediction,
-    }
 
+    except Exception as weather_error:
+        print(f"⚠️ Open-Meteo unavailable: {weather_error}")
 
+        # Fallback values when live weather is temporarily unavailable.
+        rainfall = 0.0
+        temperature = 25.0
+        wind = 10.0
+        humidity = 60.0
+
+        flood = 0.12
+        landslide = 0.10
+
+        if disruption_predictor:
+            prediction = disruption_predictor.predict(
+                rainfall_mm=rainfall,
+                temperature_c=temperature,
+                wind_speed_kmh=wind,
+                flood_risk_score=flood,
+                landslide_risk_score=landslide,
+            )
+        else:
+            hazard = flood * 0.45 + landslide * 0.55
+
+            prediction = {
+                "risk_score": hazard,
+                "risk_percent": round(hazard * 100),
+                "risk_level": "FALLBACK",
+                "ml_probability": hazard,
+                "disrupted": hazard >= 0.6,
+            }
+
+        return {
+            "status": "FALLBACK",
+            "source": "Fallback Weather",
+            "temperature_c": temperature,
+            "rainfall_mm": rainfall,
+            "wind_speed_kmh": wind,
+            "humidity_percent": humidity,
+            "weather_code": None,
+            "flood_risk_score": flood,
+            "landslide_risk_score": landslide,
+            "risk": prediction,
+            "warning": "Live weather service temporarily unavailable.",
+        }
 
 def traffic_level(congestion_value):
     if congestion_value is None:
@@ -468,7 +542,7 @@ def compute_intelligence(shipment, vehicle, telemetry):
 
         base_risk = safe_float(
          prediction.get("risk_score")
-        )
+    )
 
         hazard_risk = safe_float(
             prediction.get("hazard_score"),
