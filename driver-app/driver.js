@@ -1857,6 +1857,8 @@ async function getShipmentIntelligence() {
       const intelligence =
         response.intelligence;
 
+        console.log("🔥 INTELLIGENCE RESPONSE:", intelligence);
+        
       if (response.shipment) {
         state.shipment = {
           ...state.shipment,
@@ -1981,9 +1983,29 @@ function processIntelligence(
 EXTRACT ROUTES
 ========================================================= */
 
-function extractRoutes(
-  intelligence
-) {
+
+function extractRoutes(intelligence) {
+  if (!intelligence) {
+    return [];
+  }
+
+  // First use the actual selected route
+  if (
+    intelligence.selected_route &&
+    typeof intelligence.selected_route === "object"
+  ) {
+    const selected = intelligence.selected_route;
+
+    const alternatives = Array.isArray(
+      intelligence.alternative_routes
+    )
+      ? intelligence.alternative_routes
+      : [];
+
+    return [selected, ...alternatives];
+  }
+
+  // Then check other possible route arrays
   const candidates = [
     intelligence.routes,
     intelligence.route_options,
@@ -1992,22 +2014,18 @@ function extractRoutes(
     intelligence.routeAlternatives
   ];
 
-  for (const candidate of candidates) {
-    if (
-      Array.isArray(candidate) &&
-      candidate.length > 0
-    ) {
-      return candidate;
+  for (const routes of candidates) {
+    if (Array.isArray(routes) && routes.length > 0) {
+      return routes;
     }
   }
 
+  // Last fallback
   if (
     intelligence.route &&
     typeof intelligence.route === "object"
   ) {
-    return [
-      intelligence.route
-    ];
+    return [intelligence.route];
   }
 
   return [];
@@ -2046,11 +2064,12 @@ function normalizeRoute(
 
   const duration =
     number(
-      route.duration_minutes ??
-      route.duration ??
-      route.eta_minutes ??
-      route.durationMin
-    );
+    route.estimated_time_minutes ??
+    route.duration_minutes ??
+    route.duration ??
+    route.eta_minutes ??
+    route.durationMin
+  );
 
   const traffic =
     number(
@@ -2989,10 +3008,13 @@ START GPS TRACKING
 ========================================================= */
 
 function startGpsTracking() {
+
   if (!navigator.geolocation) {
-    alert("Geolocation is not supported on this device.");
+    setConnection("error", "Geolocation is not supported on this device.");
     return;
   }
+
+  setConnection("connecting", "Requesting GPS location...");
 
   state.gpsWatchId = navigator.geolocation.watchPosition(
     handleGpsPosition,
