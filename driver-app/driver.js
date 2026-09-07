@@ -52,7 +52,6 @@ const $ = (id) => document.getElementById(id);
 
 function setText(id, value) {
   const element = $(id);
-
   if (element) {
     element.textContent =
       value === null ||
@@ -65,7 +64,6 @@ function setText(id, value) {
 
 function show(id) {
   const element = $(id);
-
   if (element) {
     element.classList.remove("hidden");
   }
@@ -73,7 +71,6 @@ function show(id) {
 
 function hide(id) {
   const element = $(id);
-
   if (element) {
     element.classList.add("hidden");
   }
@@ -85,7 +82,6 @@ NUMBER HELPERS
 
 function number(value, fallback = 0) {
   const parsed = Number(value);
-
   return Number.isFinite(parsed)
     ? parsed
     : fallback;
@@ -119,20 +115,13 @@ async function api(path, options = {}) {
     });
 
   let data = null;
-
   const contentType =
     response.headers.get("content-type") || "";
 
-  if (
-    contentType.includes(
-      "application/json"
-    )
-  ) {
-    data =
-      await response.json();
+  if (contentType.includes("application/json")) {
+    data = await response.json();
   } else {
-    data =
-      await response.text();
+    data = await response.text();
   }
 
   if (!response.ok) {
@@ -162,10 +151,9 @@ function extractApiError(data) {
   if (data.detail) {
     if (Array.isArray(data.detail)) {
       return data.detail
-        .map(
-          item =>
-            item.msg ||
-            JSON.stringify(item)
+        .map(item =>
+          item.msg ||
+          JSON.stringify(item)
         )
         .join(", ");
     }
@@ -201,15 +189,11 @@ function setConnection(status, text) {
   );
 
   if (status === "connected") {
-    element.classList.add(
-      "connected"
-    );
+    element.classList.add("connected");
   }
 
   if (status === "error") {
-    element.classList.add(
-      "error"
-    );
+    element.classList.add("error");
   }
 
   if (label) {
@@ -303,7 +287,9 @@ function initializeMap() {
   state.map =
     L.map("map", {
       zoomControl: true,
+
       preferCanvas: true,
+
       attributionControl: true
     }).setView(
       CONFIG.MAP.defaultCenter,
@@ -316,7 +302,7 @@ function initializeMap() {
       maxZoom: 19,
 
       attribution:
-        "&copy; OpenStreetMap contributors"
+        '&copy; OpenStreetMap contributors'
     }
   ).addTo(state.map);
 
@@ -326,9 +312,7 @@ function initializeMap() {
       state.followingVehicle = false;
 
       $("followButton")
-        ?.classList.remove(
-          "active"
-        );
+        ?.classList.remove("active");
     }
   );
 }
@@ -338,6 +322,16 @@ BUTTON EVENTS
 ========================================================= */
 
 function bindEvents() {
+  $("registerDriverButton")?.addEventListener(
+    "click",
+    handleDriverRegistration
+  );
+
+  $("logoutButton")?.addEventListener(
+    "click",
+    logoutDriver
+  );
+
   $("startNavigationButton")
     ?.addEventListener(
       "click",
@@ -384,9 +378,7 @@ function bindEvents() {
     ?.addEventListener(
       "click",
       () => {
-        hide(
-          "deliveryModal"
-        );
+        hide("deliveryModal");
       }
     );
 
@@ -401,26 +393,6 @@ function bindEvents() {
       "click",
       handleDriverSelection
     );
-}
-
-/* =========================================================
-TOGGLE FOLLOW MODE
-========================================================= */
-
-function toggleFollow() {
-  state.followingVehicle = !state.followingVehicle;
-
-  const button = document.getElementById("followButton");
-
-  if (button) {
-    button.textContent = state.followingVehicle
-      ? "Following Vehicle"
-      : "Follow Vehicle";
-  }
-
-  if (state.followingVehicle) {
-    centerOnVehicle();
-  }
 }
 
 /* =========================================================
@@ -527,9 +499,7 @@ function findRequestedDriver(
     );
 
   const requestedDriverId =
-    params.get(
-      "driver_id"
-    );
+    params.get("driver_id");
 
   if (requestedDriverId) {
     const requested =
@@ -572,73 +542,50 @@ DRIVER SELECTOR
 function renderDriverSelector(
   drivers
 ) {
-  show(
-    "driverSelectionScreen"
-  );
+  show("driverSelectionScreen");
+  hide("driverApplication");
 
-  hide(
-    "driverApplication"
-  );
-
-  const select =
-    $("driverSelect");
-
-  const button =
-    $("continueDriverButton");
-
-  const message =
-    $("driverSelectionMessage");
-
-  if (!drivers.length) {
-    renderDriverRegistrationForm();
-
-    return;
-  }
+  const select = $("driverSelect");
+  const button = $("continueDriverButton");
+  const message = $("driverSelectionMessage");
+  const registerButton = $("registerDriverButton");
 
   if (select) {
-    select.disabled = false;
-
-    select.innerHTML = `
-      <option value="">
-          Select driver...
-      </option>
-
-      ${drivers
-        .map(
-          driver => `
-          <option value="${escapeHtml(
-            String(driver.id)
-          )}">
-              ${escapeHtml(
-                driver.name ||
-                "Unnamed Driver"
-              )}
+    select.disabled = drivers.length === 0;
+    select.innerHTML = drivers.length
+      ? `
+        <option value="">Select driver...</option>
+        ${drivers.map(driver => `
+          <option value="${escapeHtml(String(driver.id))}">
+            ${escapeHtml(driver.name || "Unnamed Driver")}
           </option>
-        `
-        )
-        .join("")}
-    `;
+        `).join("")}
+      `
+      : `<option value="">No registered drivers</option>`;
   }
 
   if (button) {
     button.disabled = true;
   }
 
+  if (registerButton) {
+    registerButton.classList.remove("hidden");
+  }
+
   if (message) {
-    message.textContent =
-      `${drivers.length} driver${drivers.length === 1 ? "" : "s"} available. Select your driver to continue.`;
+    message.textContent = drivers.length
+      ? `${drivers.length} driver${drivers.length === 1 ? "" : "s"} available. Select your driver or register a new one.`
+      : "No drivers registered yet. Register your driver to continue.";
   }
 }
+
 
 /* =========================================================
 DRIVER SELF-REGISTRATION
 ========================================================= */
 
 function renderDriverRegistrationForm() {
-  const card =
-    document.querySelector(
-      ".driver-selection-card"
-    );
+  const card = document.querySelector(".driver-selection-card");
 
   if (!card) {
     return;
@@ -647,269 +594,154 @@ function renderDriverRegistrationForm() {
   card.innerHTML = `
     <div class="driver-selection-icon">🚚</div>
 
-    <h2>Register Driver</h2>
+    <span class="eyebrow">DAL DRIVER PORTAL</span>
 
-    <p>
-      Enter your driver and vehicle details
-      to become available for assignments.
-    </p>
+    <h1>Driver Registration</h1>
 
-    <div
-      style="
-        display:grid;
-        gap:12px;
-        text-align:left;
-        margin-top:18px;
-      "
-    >
-      <label>
-        <span>Driver Name</span>
+    <p>Enter your driver and vehicle details to register with DAL.</p>
 
-        <input
-          id="registerDriverName"
-          type="text"
-          placeholder="Enter driver name"
-          autocomplete="name"
-        >
-      </label>
+    <div style="display:grid;gap:10px;text-align:left;width:100%;">
+      <label for="registerDriverName">Driver Name</label>
+      <input id="registerDriverName" type="text" placeholder="Enter your full name" autocomplete="name" />
 
-      <label>
-        <span>Phone Number</span>
+      <label for="registerDriverPhone">Phone Number</label>
+      <input id="registerDriverPhone" type="tel" placeholder="Enter phone number" autocomplete="tel" inputmode="tel" />
 
-        <input
-          id="registerDriverPhone"
-          type="tel"
-          placeholder="Enter phone number"
-          autocomplete="tel"
-        >
-      </label>
+      <label for="registerDriverLicense">License Number</label>
+      <input id="registerDriverLicense" type="text" placeholder="Enter license number" autocomplete="off" />
 
-      <label>
-        <span>License Number</span>
+      <label for="registerVehicleNumber">Vehicle Number</label>
+      <input id="registerVehicleNumber" type="text" placeholder="Example: NEXORA-02" autocomplete="off" />
 
-        <input
-          id="registerDriverLicense"
-          type="text"
-          placeholder="Enter license number"
-        >
-      </label>
-
-      <label>
-        <span>Vehicle Number</span>
-
-        <input
-          id="registerVehicleNumber"
-          type="text"
-          placeholder="e.g. NEXORA-01"
-        >
-      </label>
-
-      <label>
-        <span>Vehicle Capacity (kg)</span>
-
-        <input
-          id="registerVehicleCapacity"
-          type="number"
-          min="1"
-          step="1"
-          placeholder="e.g. 5000"
-        >
-      </label>
+      <label for="registerVehicleCapacity">Vehicle Capacity (kg)</label>
+      <input id="registerVehicleCapacity" type="number" min="1" step="1" placeholder="Example: 5000" inputmode="numeric" />
     </div>
 
-    <button
-      id="registerDriverButton"
-      type="button"
-      style="
-        width:100%;
-        margin-top:18px;
-      "
-    >
-      Register & Become Available
-    </button>
+    <button class="primary-button" id="registerDriverButton" type="button">Register & Continue</button>
 
-    <div
-      id="driverRegistrationMessage"
-      style="
-        margin-top:10px;
-        text-align:center;
-      "
-    ></div>
+    <button class="secondary-button" id="backToDriverSelectionButton" type="button">← Back to Driver Selection</button>
+
+    <div class="driver-selection-message" id="driverRegistrationMessage">Your driver and vehicle will be registered in DAL.</div>
   `;
 
-  $("registerDriverButton")
-    ?.addEventListener(
-      "click",
-      handleDriverRegistration
-    );
+  $("registerDriverButton")?.addEventListener(
+    "click",
+    handleDriverRegistration
+  );
+
+  $("backToDriverSelectionButton")?.addEventListener(
+    "click",
+    () => {
+      renderDriverSelector(state.drivers);
+    }
+  );
 }
 
-/* =========================================================
-DRIVER REGISTRATION
-========================================================= */
 
 async function handleDriverRegistration() {
-  const button =
-    $("registerDriverButton");
-
-  const message =
-    $("driverRegistrationMessage");
-
-  const name =
-    $("registerDriverName")
-      ?.value
-      .trim();
-
-  const phone =
-    $("registerDriverPhone")
-      ?.value
-      .trim();
-
-  const licenseNumber =
-    $("registerDriverLicense")
-      ?.value
-      .trim();
-
-  const vehicleNumber =
-    $("registerVehicleNumber")
-      ?.value
-      .trim();
-
-  const capacity =
-    number(
-      $("registerVehicleCapacity")
-        ?.value,
-      0
-    );
+  const name = $("registerDriverName")?.value.trim();
+  const phone = $("registerDriverPhone")?.value.trim();
+  const licenseNumber = $("registerDriverLicense")?.value.trim();
+  const vehicleNumber = $("registerVehicleNumber")?.value.trim();
+  const capacity = Number(
+    $("registerVehicleCapacity")?.value
+  );
+  const button = $("registerDriverButton");
+  const message = $("driverRegistrationMessage");
 
   if (!name) {
-    if (message) {
-      message.textContent =
-        "Driver name is required.";
-    }
-
+    if (message) message.textContent = "Please enter your name.";
     return;
   }
 
   if (!vehicleNumber) {
-    if (message) {
-      message.textContent =
-        "Vehicle number is required.";
-    }
-
+    if (message) message.textContent = "Please enter your vehicle number.";
     return;
   }
 
-  if (capacity <= 0) {
-    if (message) {
-      message.textContent =
-        "Vehicle capacity must be greater than 0 kg.";
-    }
+  if (phone && !/^[0-9+()\s-]{7,20}$/.test(phone)) {
+    if (message) message.textContent = "Please enter a valid phone number.";
+    return;
+  }
 
+  if (!Number.isFinite(capacity) || capacity <= 0) {
+    if (message) message.textContent = "Please enter a valid vehicle capacity.";
     return;
   }
 
   if (button) {
     button.disabled = true;
+    button.textContent = "Registering...";
+  }
 
-    button.textContent =
-      "Registering...";
+  if (message) {
+    message.textContent = "Registering your vehicle and driver...";
   }
 
   try {
     const vehiclesResponse =
-      await api(
-        "/api/v1/vehicles"
-      );
+      await api("/api/v1/vehicles/");
 
     const vehicles =
-      normalizeCollection(
-        vehiclesResponse
-      );
+      normalizeCollection(vehiclesResponse);
 
     let vehicle =
       vehicles.find(
         item =>
-          String(
-            item.vehicle_number ||
-            item.number ||
-            ""
-          )
+          String(item.vehicle_number || "")
             .trim()
             .toLowerCase() ===
           vehicleNumber.toLowerCase()
-      );
+      ) || null;
 
     if (!vehicle) {
-      const vehicleResponse =
-        await api(
-          "/api/v1/vehicles/create",
-          {
-            method: "POST",
-
-            body: JSON.stringify({
-              vehicle_number:
-                vehicleNumber,
-
-              capacity_kg:
-                capacity
-            })
-          }
-        );
-
-      vehicle =
-        vehicleResponse.vehicle ||
-        vehicleResponse;
-    } else {
-      const existingCapacity =
-        number(
-          vehicle.capacity_kg ??
-          vehicle.max_weight_kg ??
-          vehicle.max_capacity_kg,
-          0
-        );
-
-      if (
-        existingCapacity > 0 &&
-        existingCapacity < capacity
-      ) {
-        throw new Error(
-          `Vehicle ${vehicleNumber} already exists with ${existingCapacity} kg capacity.`
-        );
-      }
-    }
-
-    if (!vehicle?.id) {
-      throw new Error(
-        "Vehicle was not created or returned by the backend."
-      );
-    }
-
-    const driverResponse =
-      await api(
-        "/api/v1/drivers/create",
+      vehicle = await api(
+        "/api/v1/vehicles/create",
         {
           method: "POST",
-
           body: JSON.stringify({
-            name,
-
-            phone:
-              phone || null,
-
-            license_number:
-              licenseNumber ||
-              null,
-
-            vehicle_id:
-              vehicle.id
+            vehicle_number: vehicleNumber,
+            capacity_kg: capacity
           })
         }
       );
+    } else {
+      const existingCapacity =
+        Number(vehicle.capacity_kg);
+
+      if (
+        Number.isFinite(existingCapacity) &&
+        existingCapacity < capacity
+      ) {
+        if (message) {
+          message.textContent =
+            `Vehicle ${vehicleNumber} already exists with ${existingCapacity} kg capacity.`;
+        }
+
+        if (button) {
+          button.disabled = false;
+          button.textContent = "Register & Become Available";
+        }
+
+        return;
+      }
+    }
+
+    const result = await api(
+      "/api/v1/drivers/create",
+      {
+        method: "POST",
+        body: JSON.stringify({
+          name,
+          phone: phone || null,
+          license_number: licenseNumber || null,
+          vehicle_id: vehicle.id
+        })
+      }
+    );
 
     const driver =
-      driverResponse.driver ||
-      driverResponse;
+      result?.driver || result;
 
     if (!driver?.id) {
       throw new Error(
@@ -923,14 +755,17 @@ async function handleDriverRegistration() {
     );
 
     const url =
-      new URL(
-        window.location.href
-      );
+      new URL(window.location.href);
 
     url.searchParams.set(
       "driver_id",
       driver.id
     );
+
+    if (message) {
+      message.textContent =
+        "Registration successful. Loading your driver portal...";
+    }
 
     window.location.href =
       url.toString();
@@ -943,12 +778,11 @@ async function handleDriverRegistration() {
     if (message) {
       message.textContent =
         error.message ||
-        "Unable to register driver.";
+        "Registration failed. Please try again.";
     }
 
     if (button) {
       button.disabled = false;
-
       button.textContent =
         "Register & Become Available";
     }
@@ -1096,61 +930,21 @@ function findAssignedShipment(
   const vehicleId =
     String(vehicle.id);
 
-  const vehicleNumber =
-    String(
-      vehicle.vehicle_number ||
-      vehicle.number ||
-      ""
-    ).trim().toLowerCase();
-
   const assigned =
     shipments.filter(
       shipment => {
-        const assignment =
-          shipment.assignment ||
-          shipment.assigned ||
-          {};
-
-        const shipmentVehicle =
-          shipment.vehicle ||
-          assignment.vehicle ||
-          {};
-
-        const assignedVehicleId =
+        const assignedVehicle =
           shipment.vehicle_id ||
           shipment.assigned_vehicle_id ||
-          shipmentVehicle.id ||
-          assignment.vehicle_id;
-
-        const assignedVehicleNumber =
-          String(
-            shipment.vehicle_number ||
-            shipmentVehicle.vehicle_number ||
-            assignment.vehicle_number ||
-            ""
-          ).trim().toLowerCase();
-
-        const driverId =
-          shipment.driver_id ||
-          assignment.driver_id ||
-          shipment.driver?.id ||
-          assignment.driver?.id;
-
-        const matchesVehicle =
-          (assignedVehicleId &&
-            String(assignedVehicleId) === vehicleId) ||
-          (vehicleNumber &&
-            assignedVehicleNumber === vehicleNumber);
-
-        const matchesDriver =
-          state.driver?.id &&
-          driverId &&
-          String(driverId) ===
-            String(state.driver.id);
+          shipment.vehicle?.id;
 
         return (
-          (matchesVehicle || matchesDriver) &&
-          !isCompletedShipment(shipment)
+          assignedVehicle &&
+          String(assignedVehicle) ===
+          vehicleId &&
+          !isCompletedShipment(
+            shipment
+          )
         );
       }
     );
@@ -1159,28 +953,29 @@ function findAssignedShipment(
     assigned.find(
       shipment =>
         String(
-          shipment.status ||
-          ""
+          shipment.status
         ).toLowerCase() ===
         "in_transit"
     ) ||
+
     assigned.find(
       shipment =>
         String(
-          shipment.status ||
-          ""
+          shipment.status
         ).toLowerCase() ===
         "assigned"
     ) ||
+
     assigned.find(
       shipment =>
         String(
-          shipment.status ||
-          ""
+          shipment.status
         ).toLowerCase() ===
         "pending"
     ) ||
+
     assigned[0] ||
+
     null
   );
 }
@@ -1214,6 +1009,124 @@ function isCompletedShipment(shipment) {
     status === "cancelled" ||
     status === "completed"
   );
+}
+
+/* =========================================================
+MISSION SUMMARY HELPERS
+========================================================= */
+
+function getVehicleCapacityKg(vehicle = state.vehicle) {
+  if (!vehicle) return null;
+
+  const value =
+    vehicle.max_weight_kg ??
+    vehicle.max_capacity_kg ??
+    vehicle.capacity_kg ??
+    vehicle.max_kg ??
+    vehicle.load_capacity_kg;
+
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function getShipmentWeightKg(shipment = state.shipment) {
+  if (!shipment) return null;
+
+  const value =
+    shipment.weight_kg ??
+    shipment.weight ??
+    shipment.load_kg;
+
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function getShipmentPriority(shipment = state.shipment) {
+  if (!shipment) return "Normal";
+
+  return (
+    shipment.priority_level ||
+    shipment.priority ||
+    shipment.urgency_level ||
+    "Normal"
+  );
+}
+
+function renderMissionSummary() {
+  const driverName =
+    state.driver?.name || "--";
+
+  const vehicleNumber =
+    state.vehicle?.vehicle_number ||
+    state.vehicle?.number ||
+    state.vehicle?.name ||
+    state.vehicle?.id ||
+    "--";
+
+  const capacity =
+    getVehicleCapacityKg();
+
+  const weight =
+    getShipmentWeightKg();
+
+  const priority =
+    getShipmentPriority();
+
+  setText("missionDriverName", driverName);
+  setText("missionVehicleNumber", vehicleNumber);
+  setText(
+    "missionVehicleCapacity",
+    capacity !== null ? `${number(capacity)} kg` : "--"
+  );
+  setText(
+    "missionShipmentWeight",
+    weight !== null ? `${number(weight)} kg` : "--"
+  );
+  setText("missionPriority", priority);
+
+  const status =
+    state.shipment?.status ||
+    (state.navigationStarted ? "In Transit" : "Ready");
+
+  setText("missionStatus", formatStatus(status));
+
+  const statusElement = $("missionStatus");
+  if (statusElement) {
+    statusElement.classList.remove(
+      "critical",
+      "high",
+      "normal",
+      "warning"
+    );
+
+    const normalized = String(status).toLowerCase();
+    if (normalized.includes("delivered") || normalized.includes("completed")) {
+      statusElement.classList.add("normal");
+    } else if (normalized.includes("transit")) {
+      statusElement.classList.add("high");
+    } else if (normalized.includes("waiting") || normalized.includes("assigned")) {
+      statusElement.classList.add("warning");
+    }
+  }
+}
+
+function validateMissionCapacity() {
+  const capacity = getVehicleCapacityKg();
+  const weight = getShipmentWeightKg();
+
+  if (capacity === null || weight === null) {
+    return true;
+  }
+
+  if (weight > capacity) {
+    showAlert(
+      "Vehicle Capacity Exceeded",
+      `Shipment weight is ${number(weight)} kg, but ${number(capacity)} kg is the maximum vehicle capacity.`
+    );
+    return false;
+  }
+
+  return true;
 }
 
 /* =========================================================
@@ -1257,6 +1170,8 @@ function renderDriver() {
     avatar.textContent =
       initials || "DR";
   }
+
+  renderMissionSummary();
 }
 
 /* =========================================================
@@ -1320,6 +1235,8 @@ function renderVehicle() {
       )
     );
   }
+
+  renderMissionSummary();
 }
 
 /* =========================================================
@@ -1451,46 +1368,8 @@ function renderShipment() {
       )
     );
   }
-}
 
-/* =========================================================
-RENDER VEHICLE ONLY
-========================================================= */
-
-function renderVehicleOnly() {
-  setText("shipmentId", "No Assignment");
-  setText("shipmentStatus", "Waiting");
-
-  const routeList = $("routeList");
-
-  if (routeList) {
-    routeList.innerHTML = `
-      <div class="loading-state">
-          <span>Waiting for shipment assignment...</span>
-      </div>
-    `;
-  }
-
-  disableNavigation();
-}
-
-/* =========================================================
-SHOW INITIAL ERROR
-========================================================= */
-
-function showInitialError(message) {
-  const routeList = $("routeList");
-
-  if (routeList) {
-    routeList.innerHTML = `
-      <div class="error-state">
-          <span class="error-icon">✗</span>
-          <span>${escapeHtml(message)}</span>
-      </div>
-    `;
-  }
-
-  disableNavigation();
+  renderMissionSummary();
 }
 
 /* =========================================================
@@ -1514,6 +1393,8 @@ function renderNoVehicle() {
     "vehicleNumber",
     "No Vehicle"
   );
+
+  renderMissionSummary();
 
   setText(
     "vehicleStatus",
@@ -1539,6 +1420,8 @@ function renderNoVehicle() {
     "shipmentStatus",
     "Waiting"
   );
+
+  renderMissionSummary();
 
   const routeList =
     $("routeList");
@@ -1848,66 +1731,9 @@ async function getShipmentIntelligence() {
     );
 
   try {
-    const response =
-      await api(
-        `/api/v1/shipments/${shipmentId}/intelligence`
-      );
-
-    if (response?.intelligence) {
-      const intelligence =
-        response.intelligence;
-
-        console.log("🔥 INTELLIGENCE RESPONSE:", intelligence);
-        
-      if (response.shipment) {
-        state.shipment = {
-          ...state.shipment,
-          ...response.shipment
-        };
-      }
-
-      if (response.vehicle) {
-        state.vehicle = {
-          ...state.vehicle,
-          ...response.vehicle
-        };
-      }
-
-      if (response.assignment) {
-        state.shipment = {
-          ...state.shipment,
-          assignment:
-            response.assignment
-        };
-      }
-
-      const vehiclePosition =
-        extractVehiclePosition({
-          ...intelligence,
-
-          vehicle_position:
-            response.vehicle?.latitude !== undefined
-              ? {
-                  latitude:
-                    response.vehicle.latitude,
-
-                  longitude:
-                    response.vehicle.longitude
-                }
-              : intelligence.vehicle_position
-        });
-
-      if (vehiclePosition) {
-        updateVehicleMarker(
-          vehiclePosition.lat,
-          vehiclePosition.lon
-        );
-      }
-
-      return intelligence;
-    }
-
-    return response;
+    return await api(
+      `/api/v1/shipments/${shipmentId}/intelligence`
+    );
   } catch (primaryError) {
     console.warn(
       "Primary intelligence endpoint unavailable.",
@@ -1915,13 +1741,9 @@ async function getShipmentIntelligence() {
     );
   }
 
-  const fallback =
-    await api(
-      `/api/v1/routes/optimize?shipment_id=${shipmentId}`
-    );
-
-  return fallback?.intelligence ||
-    fallback;
+  return await api(
+    `/api/v1/routes/optimize?shipment_id=${shipmentId}`
+  );
 }
 
 /* =========================================================
@@ -1983,29 +1805,9 @@ function processIntelligence(
 EXTRACT ROUTES
 ========================================================= */
 
-
-function extractRoutes(intelligence) {
-  if (!intelligence) {
-    return [];
-  }
-
-  // First use the actual selected route
-  if (
-    intelligence.selected_route &&
-    typeof intelligence.selected_route === "object"
-  ) {
-    const selected = intelligence.selected_route;
-
-    const alternatives = Array.isArray(
-      intelligence.alternative_routes
-    )
-      ? intelligence.alternative_routes
-      : [];
-
-    return [selected, ...alternatives];
-  }
-
-  // Then check other possible route arrays
+function extractRoutes(
+  intelligence
+) {
   const candidates = [
     intelligence.routes,
     intelligence.route_options,
@@ -2014,18 +1816,21 @@ function extractRoutes(intelligence) {
     intelligence.routeAlternatives
   ];
 
-  for (const routes of candidates) {
-    if (Array.isArray(routes) && routes.length > 0) {
-      return routes;
+  for (const candidate of candidates) {
+    if (Array.isArray(candidate) &&
+      candidate.length > 0) {
+      return candidate;
     }
   }
 
-  // Last fallback
   if (
     intelligence.route &&
-    typeof intelligence.route === "object"
+    typeof intelligence.route ===
+    "object"
   ) {
-    return [intelligence.route];
+    return [
+      intelligence.route
+    ];
   }
 
   return [];
@@ -2065,12 +1870,12 @@ function normalizeRoute(
 
   const duration =
     number(
-    route.estimated_time_minutes ??
-    route.duration_minutes ??
-    route.duration ??
-    route.eta_minutes ??
-    route.durationMin
-  );
+      route.duration_minutes ??
+      route.estimated_time_minutes ??
+      route.duration ??
+      route.eta_minutes ??
+      route.durationMin
+    );
 
   const traffic =
     number(
@@ -2080,7 +1885,9 @@ function normalizeRoute(
     );
 
   const accessibility =
-    number(
+    normalizeAccessibility(
+      route.accessibility_percent ??
+      route.road_accessibility_percent ??
       route.accessibility_score ??
       route.accessibility ??
       0
@@ -2120,6 +1927,24 @@ function normalizeRoute(
 
     geometry
   };
+}
+
+function normalizeAccessibility(value) {
+  if (value === null || value === undefined || value === "") {
+    return 0;
+  }
+
+  let accessibility = Number(value);
+
+  if (!Number.isFinite(accessibility)) {
+    return 0;
+  }
+
+  if (accessibility > 1) {
+    accessibility /= 100;
+  }
+
+  return clamp(accessibility, 0, 1);
 }
 
 /* =========================================================
@@ -2435,15 +2260,11 @@ ROUTE COLORS
 function routeColor(
   level
 ) {
-  if (
-    level === "dangerous"
-  ) {
+  if (level === "dangerous") {
     return "#ef4444";
   }
 
-  if (
-    level === "moderate"
-  ) {
+  if (level === "moderate") {
     return "#f59e0b";
   }
 
@@ -2548,9 +2369,9 @@ function routeCardHtml(
       : "ETA unavailable";
 
   const riskPercent =
-  Math.round(
-    (1 - route.risk) * 100
-  );
+    Math.round(
+      route.risk * 100
+    );
 
   const riskLabel =
     route.riskLevel === "dangerous"
@@ -2883,10 +2704,17 @@ function refreshSelectedRouteLayer() {
         opacity:
           selected
             ? 0.95
-            : 0.55
+            : 0.5,
+
+        color:
+          routeColor(
+            item.route.riskLevel
+          )
       });
 
       if (selected) {
+        item.layer.bringToFront();
+
         state.selectedRouteLayer =
           item.layer;
       }
@@ -2895,34 +2723,25 @@ function refreshSelectedRouteLayer() {
 }
 
 /* =========================================================
-NAVIGATION BUTTONS
+NAVIGATION
 ========================================================= */
 
 function enableNavigation() {
-  const startButton =
+  const button =
     $("startNavigationButton");
 
-  const stopButton =
-    $("stopNavigationButton");
-
-  if (startButton) {
-    startButton.disabled =
+  if (button) {
+    button.disabled =
       !state.selectedRoute;
-  }
-
-  if (stopButton) {
-    stopButton.disabled =
-      !state.navigationStarted;
   }
 }
 
 function disableNavigation() {
-  const startButton =
+  const button =
     $("startNavigationButton");
 
-  if (startButton) {
-    startButton.disabled =
-      true;
+  if (button) {
+    button.disabled = true;
   }
 }
 
@@ -2941,6 +2760,10 @@ function startNavigation() {
       "Driver, vehicle, shipment and route are required."
     );
 
+    return;
+  }
+
+  if (!validateMissionCapacity()) {
     return;
   }
 
@@ -2968,6 +2791,8 @@ function startNavigation() {
     "In Transit"
   );
 
+  renderMissionSummary();
+
   startGpsTracking();
 
   centerOnVehicle();
@@ -2983,774 +2808,325 @@ STOP NAVIGATION
 ========================================================= */
 
 function stopNavigation() {
-  state.navigationStarted = false;
-
-  hide("navigationBanner");
-  hide("stopNavigationButton");
-
-  show("startNavigationButton");
-  hide("deliverButton");
-
-  setText(
-    "shipmentStatus",
-    "Assigned"
-  );
+  state.navigationStarted =
+    false;
 
   stopGpsTracking();
 
+  hide(
+    "navigationBanner"
+  );
+
+  hide(
+    "stopNavigationButton"
+  );
+
+  show(
+    "startNavigationButton"
+  );
+
+  hide(
+    "deliverButton"
+  );
+
+  enableNavigation();
+
+  renderMissionSummary();
+
   setConnection(
     "connected",
-    "Navigation Stopped"
+    "Navigation Paused"
   );
 }
 
 /* =========================================================
-START GPS TRACKING
+GPS TRACKING
 ========================================================= */
 
 function startGpsTracking() {
+  if (
+    !navigator.geolocation
+  ) {
+    setGpsStatus(
+      "GPS unavailable",
+      "Browser does not support geolocation"
+    );
 
-  if (!navigator.geolocation) {
-    setConnection("error", "Geolocation is not supported on this device.");
     return;
   }
 
-  setConnection("connecting", "Requesting GPS location...");
+  if (
+    state.gpsWatchId !== null
+  ) {
+    return;
+  }
 
-  state.gpsWatchId = navigator.geolocation.watchPosition(
-    handleGpsPosition,
-    handleGpsError,
-    CONFIG.GPS_OPTIONS
+  setGpsStatus(
+    "Requesting GPS",
+    "Waiting for high accuracy location..."
   );
+
+  state.gpsWatchId =
+    navigator.geolocation.watchPosition(
+      handleGpsPosition,
+      handleGpsError,
+      CONFIG.GPS_OPTIONS
+    );
 }
 
 /* =========================================================
-STOP GPS TRACKING
+STOP GPS
 ========================================================= */
 
 function stopGpsTracking() {
-  if (state.gpsWatchId !== null) {
-    navigator.geolocation.clearWatch(state.gpsWatchId);
+  if (
+    state.gpsWatchId !== null
+  ) {
+    navigator.geolocation.clearWatch(
+      state.gpsWatchId
+    );
+
     state.gpsWatchId = null;
   }
 }
 
 /* =========================================================
-HANDLE GPS POSITION
+GPS SUCCESS
 ========================================================= */
 
-function handleGpsPosition(position) {
-  const { latitude, longitude } = position.coords;
+async function handleGpsPosition(
+  position
+) {
+  const {
+    latitude,
+    longitude,
+    accuracy,
+    speed
+  } = position.coords;
 
-  state.previousPosition = state.currentPosition;
-  state.currentPosition = { lat: latitude, lon: longitude };
+  const now =
+    Date.now();
 
-  updateVehicleMarker(latitude, longitude);
+  state.previousPosition =
+    state.currentPosition;
 
-  const now = Date.now();
-  if (now - state.lastGpsSentAt >= CONFIG.GPS_SEND_INTERVAL) {
-    sendGpsToBackend(latitude, longitude);
-    state.lastGpsSentAt = now;
-  }
-}
+  state.currentPosition = {
+    lat: latitude,
+    lon: longitude,
 
-/* =========================================================
-HANDLE GPS ERROR
-========================================================= */
+    accuracy,
 
-function handleGpsError(error) {
-  console.warn("GPS Error:", error.message);
+    speed:
+      Number.isFinite(speed)
+        ? speed * 3.6
+        : estimateSpeed(),
 
-  const messages = {
-    1: "Location permission denied. Enable in settings.",
-    2: "Location unavailable. Check signal.",
-    3: "Location request timed out. Try again."
+    timestamp:
+      position.timestamp
   };
 
-  const message = messages[error.code] || "GPS error: " + error.message;
+  updateVehicleMarker(
+    latitude,
+    longitude
+  );
 
-  setConnection("error", message);
+  setGpsStatus(
+    "GPS Active",
+    `Accuracy ±${Math.round(
+      accuracy
+    )} m`
+  );
+
+  setText(
+    "speedValue",
+    Number.isFinite(
+      state.currentPosition.speed
+    )
+      ? `${Math.round(
+          state.currentPosition.speed
+        )} km/h`
+      : "--"
+  );
+
+  if (
+    now -
+    state.lastGpsSentAt >=
+    CONFIG.GPS_SEND_INTERVAL
+  ) {
+    state.lastGpsSentAt =
+      now;
+
+    await sendGpsToBackend();
+  }
+
+  updateProgressFromGps();
 }
 
 /* =========================================================
-SEND GPS TO BACKEND
+ESTIMATE SPEED
 ========================================================= */
 
-async function sendGpsToBackend(latitude, longitude) {
-  try {
-    const vehicleId = encodeURIComponent(state.vehicle.id);
+function estimateSpeed() {
+  if (
+    !state.previousPosition ||
+    !state.currentPosition
+  ) {
+    return null;
+  }
 
+  const previous =
+    state.previousPosition;
+
+  const current =
+    state.currentPosition;
+
+  const distance =
+    haversineKm(
+      previous.lat,
+      previous.lon,
+      current.lat,
+      current.lon
+    );
+
+  const timeHours =
+    (
+      current.timestamp -
+      previous.timestamp
+    ) /
+    3600000;
+
+  if (
+    timeHours <= 0
+  ) {
+    return null;
+  }
+
+  return (
+    distance /
+    timeHours
+  );
+}
+
+/* =========================================================
+SEND GPS
+========================================================= */
+
+async function sendGpsToBackend() {
+  if (
+    !state.vehicle ||
+    !state.currentPosition
+  ) {
+    return;
+  }
+
+  const vehicleId =
+    encodeURIComponent(
+      state.vehicle.id
+    );
+
+  try {
     await api(
       `/api/v1/vehicles/${vehicleId}/update-location`,
       {
         method: "POST",
 
         body: JSON.stringify({
-          latitude,
-          longitude,
-          status: state.navigationStarted ? "in_transit" : "available"
-        })
-      }
-    );
-  } catch (error) {
-    console.warn("Failed to send GPS location:", error.message);
-  }
-}
+          latitude:
+            state.currentPosition.lat,
 
-/* =========================================================
-START AUTO REFRESH
-========================================================= */
+          longitude:
+            state.currentPosition.lon,
 
-function startAutoRefresh() {
-  state.refreshTimer = setInterval(
-    () => {
-      refreshIntelligence();
-    },
-    CONFIG.REFRESH_INTERVAL
-  );
-}
+          speed_kmh:
+            state.currentPosition.speed,
 
-/* =========================================================
-MARK DELIVERED
-========================================================= */
-
-async function markDelivered() {
-  if (!state.shipment) {
-    return;
-  }
-
-  const confirmed = confirm("Mark shipment as delivered?");
-
-  if (!confirmed) {
-    return;
-  }
-
-  try {
-    const shipmentId = encodeURIComponent(state.shipment.id);
-
-    await api(
-      `/api/v1/shipments/${shipmentId}/mark-delivered`,
-      {
-        method: "POST",
-
-        body: JSON.stringify({
-          status: "delivered"
+          status:
+            "in_transit"
         })
       }
     );
 
-    setText("shipmentStatus", "Delivered");
+    state.vehicle.current_lat =
+      state.currentPosition.lat;
 
-    show("deliveryModal");
+    state.vehicle.current_lon =
+      state.currentPosition.lon;
 
-    stopNavigation();
-
-    setConnection("connected", "Delivery Confirmed");
+    setConnection(
+      "connected",
+      "GPS Synced"
+    );
   } catch (error) {
-    alert("Failed to mark delivered: " + error.message);
+    console.error(
+      "GPS update failed:",
+      error
+    );
+
+    setConnection(
+      "error",
+      "GPS Sync Failed"
+    );
   }
 }
 
 /* =========================================================
-CHECK FOR REROUTE
+GPS ERROR
 ========================================================= */
 
-function checkForReroute(intelligence) {
-  const currentRisk = normalizeRisk(
-    intelligence.risk_percent ??
-    intelligence.risk_score ??
-    intelligence.risk
-  );
-
-  const selectedRisk = normalizeRisk(
-    state.selectedRoute?.risk ?? 0
-  );
-
-  if (currentRisk > 0.65 && currentRisk > selectedRisk + 0.15) {
-    state.reroutePending = true;
-
-    show("rerouteModal");
-  }
-}
-
-/* =========================================================
-ACCEPT REROUTE
-========================================================= */
-
-async function acceptReroute() {
-  const safest = chooseSafestRoute(state.routes);
-
-  if (safest) {
-    await selectRoute(safest, true);
-  }
-
-  state.reroutePending = false;
-
-  hide("rerouteModal");
-}
-
-/* =========================================================
-KEEP CURRENT ROUTE
-========================================================= */
-
-function keepCurrentRoute() {
-  state.reroutePending = false;
-
-  hide("rerouteModal");
-}
-
-/* =========================================================
-JOURNEY STATS
-========================================================= */
-
-function updateJourneyStats(
-  intelligence
+function handleGpsError(
+  error
 ) {
-  const route =
-    intelligence.selected_route ||
-    intelligence.selectedRoute ||
-    intelligence.route ||
-    state.selectedRoute;
-
-  const distance =
-    number(
-      intelligence.distance_km ??
-      intelligence.distance ??
-      route?.distance_km ??
-      route?.distance ??
-      state.selectedRoute?.distance
-    );
-
-  const duration =
-    number(
-      intelligence.estimated_time_minutes ??
-      intelligence.eta_minutes ??
-      intelligence.duration_minutes ??
-      route?.duration_minutes ??
-      route?.duration ??
-      state.selectedRoute?.duration
-    );
-
-  setText(
-    "distanceValue",
-    distance > 0
-      ? `${distance.toFixed(1)} km`
-      : "--"
+  console.warn(
+    "GPS error:",
+    error
   );
 
-  setText(
-    "etaValue",
-    duration > 0
-      ? formatMinutes(
-          duration
-        )
-      : "--"
-  );
-
-  const speed =
-    number(
-      state.vehicle?.speed_kmh ??
-      state.vehicle?.speed ??
-      intelligence.speed_kmh
-    );
-
-  setText(
-    "speedValue",
-    speed > 0
-      ? `${Math.round(speed)} km/h`
-      : "--"
-  );
-}
-
-/* =========================================================
-RISK DISPLAY
-========================================================= */
-
-function updateRisk(
-  intelligence
-) {
-  const rawRisk =
-    intelligence.risk_percent ??
-    intelligence.risk_percentage ??
-    intelligence.risk_score ??
-    intelligence.disruption_risk ??
-    intelligence.risk;
-
-  const risk =
-    normalizeRisk(
-      rawRisk
-    );
-
-  const percent =
-    Math.round(
-      risk * 100
-    );
-
-  const level =
-    normalizeRiskLevel(
-      intelligence.risk_level ??
-      intelligence.riskLevel ??
-      risk
-    );
-
-  setText(
-    "riskValue",
-    `${percent}%`
-  );
-
-  setText(
-    "riskLabel",
-    riskLabel(
-      level
-    )
-  );
-
-  const riskElement =
-    $("riskValue");
-
-  if (riskElement) {
-    riskElement.classList.remove(
-      "safe",
-      "moderate",
-      "dangerous"
-    );
-
-    riskElement.classList.add(
-      level
-    );
-  }
-
-  const riskBar =
-    $("riskBar");
-
-  if (riskBar) {
-    riskBar.style.width =
-      `${percent}%`;
-
-    riskBar.className =
-      `risk-bar ${level}`;
-  }
-
-  updateMissionRisk(
-    percent,
-    level
-  );
-}
-
-/* =========================================================
-MISSION RISK
-========================================================= */
-
-function updateMissionRisk(
-  percent,
-  level
-) {
-  setText(
-    "missionRisk",
-    `${percent}%`
-  );
-
-  setText(
-    "missionRiskLabel",
-    riskLabel(
-      level
-    )
-  );
-
-  const element =
-    $("missionRisk");
-
-  if (element) {
-    element.classList.remove(
-      "safe",
-      "moderate",
-      "dangerous"
-    );
-
-    element.classList.add(
-      level
-    );
-  }
-}
-
-function riskLabel(
-  level
-) {
-  if (
-    level === "dangerous"
-  ) {
-    return "High Risk";
-  }
+  let message =
+    "Unable to obtain location";
 
   if (
-    level === "moderate"
+    error.code ===
+    error.PERMISSION_DENIED
   ) {
-    return "Moderate Risk";
+    message =
+      "Location permission denied";
+  } else if (
+    error.code ===
+    error.POSITION_UNAVAILABLE
+  ) {
+    message =
+      "Location unavailable";
+  } else if (
+    error.code ===
+    error.TIMEOUT
+  ) {
+    message =
+      "GPS request timed out";
   }
 
-  return "Low Risk";
-}
-
-/* =========================================================
-WEATHER
-========================================================= */
-
-function updateWeather(
-  weather
-) {
-  if (!weather) {
-    return;
-  }
-
-  const temperature =
-    weather.temperature_c ??
-    weather.temperature ??
-    weather.temp_c ??
-    weather.temp;
-
-  const condition =
-    weather.condition ||
-    weather.description ||
-    weather.weather ||
-    weather.summary;
-
-  const rainfall =
-    weather.rainfall_mm ??
-    weather.rain_mm ??
-    weather.precipitation_mm;
-
-  const humidity =
-    weather.humidity_percent ??
-    weather.humidity;
-
-  setText(
-    "weatherTemperature",
-    temperature !== undefined &&
-    temperature !== null
-      ? `${number(
-          temperature
-        ).toFixed(1)}°C`
-      : "--"
-  );
-
-  setText(
-    "weatherCondition",
-    condition ||
-      "Unknown"
-  );
-
-  setText(
-    "weatherRainfall",
-    rainfall !== undefined &&
-    rainfall !== null
-      ? `${number(
-          rainfall
-        ).toFixed(1)} mm`
-      : "--"
-  );
-
-  setText(
-    "weatherHumidity",
-    humidity !== undefined &&
-    humidity !== null
-      ? `${Math.round(
-          number(humidity)
-        )}%`
-      : "--"
+  setGpsStatus(
+    "GPS Error",
+    message
   );
 }
 
 /* =========================================================
-ALERTS
+GPS UI
 ========================================================= */
 
-function updateAlerts(
-  intelligence
+function setGpsStatus(
+  status,
+  detail
 ) {
-  const weather =
-    intelligence.weather;
-
-  updateWeather(
-    weather
+  setText(
+    "gpsStatus",
+    status
   );
-
-  const alerts =
-    [];
-
-  if (
-    Array.isArray(
-      intelligence.alerts
-    )
-  ) {
-    alerts.push(
-      ...intelligence.alerts
-    );
-  }
-
-  if (
-    Array.isArray(
-      intelligence.weather_alerts
-    )
-  ) {
-    alerts.push(
-      ...intelligence.weather_alerts
-    );
-  }
-
-  if (
-    intelligence.alert
-  ) {
-    alerts.push(
-      intelligence.alert
-    );
-  }
-
-  if (
-    weather?.alert
-  ) {
-    alerts.push(
-      weather.alert
-    );
-  }
-
-  renderAlerts(
-    alerts
-  );
-}
-
-/* =========================================================
-RENDER ALERTS
-========================================================= */
-
-function renderAlerts(
-  alerts
-) {
-  const container =
-    $("alertsList");
-
-  if (!container) {
-    return;
-  }
-
-  const normalized =
-    alerts
-      .filter(Boolean)
-      .map(
-        normalizeAlert
-      );
-
-  if (!normalized.length) {
-    container.innerHTML = `
-      <div class="alert-empty">
-          <span class="alert-icon">
-              ✓
-          </span>
-          <span>
-              No active disruption alerts
-          </span>
-      </div>
-    `;
-
-    return;
-  }
-
-  container.innerHTML =
-    normalized
-      .slice(0, 5)
-      .map(
-        alert =>
-          alertHtml(
-            alert
-          )
-      )
-      .join("");
-}
-
-function normalizeAlert(
-  alert
-) {
-  if (
-    typeof alert === "string"
-  ) {
-    return {
-      title:
-        "Disruption Alert",
-
-      message:
-        alert,
-
-      level:
-        "warning"
-    };
-  }
-
-  return {
-    title:
-      alert.title ||
-      alert.name ||
-      alert.type ||
-      "Disruption Alert",
-
-    message:
-      alert.message ||
-      alert.description ||
-      alert.details ||
-      "Potential route disruption detected.",
-
-    level:
-      normalizeAlertLevel(
-        alert.level ||
-        alert.severity ||
-        alert.status
-      )
-  };
-}
-
-function normalizeAlertLevel(
-  value
-) {
-  const text =
-    String(
-      value || ""
-    ).toLowerCase();
-
-  if (
-    text.includes("critical") ||
-    text.includes("danger") ||
-    text.includes("high")
-  ) {
-    return "danger";
-  }
-
-  if (
-    text.includes("medium") ||
-    text.includes("moderate") ||
-    text.includes("warning")
-  ) {
-    return "warning";
-  }
-
-  return "info";
-}
-
-function alertHtml(
-  alert
-) {
-  return `
-    <div class="alert-card ${escapeHtml(
-      alert.level
-    )}">
-        <div class="alert-card-icon">
-            ${
-              alert.level === "danger"
-                ? "⚠"
-                : alert.level === "warning"
-                    ? "!"
-                    : "i"
-            }
-        </div>
-
-        <div class="alert-card-content">
-            <strong>
-                ${escapeHtml(
-                  alert.title
-                )}
-            </strong>
-
-            <span>
-                ${escapeHtml(
-                  alert.message
-                )}
-            </span>
-        </div>
-    </div>
-  `;
-}
-
-/* =========================================================
-NAVIGATION INSTRUCTION
-========================================================= */
-
-function updateNavigationInstruction(
-  intelligence
-) {
-  const instruction =
-    intelligence.next_instruction ||
-    intelligence.navigation_instruction ||
-    intelligence.instruction ||
-    intelligence.next_turn;
-
-  if (!instruction) {
-    return;
-  }
 
   setText(
-    "navigationInstruction",
-    instruction
+    "gpsAccuracy",
+    detail
   );
-
-  const distance =
-    intelligence.next_instruction_distance_m ??
-    intelligence.next_turn_distance_m ??
-    intelligence.maneuver_distance_m;
-
-  if (
-    distance !== undefined &&
-    distance !== null
-  ) {
-    setText(
-      "instructionDistance",
-      formatDistance(
-        distance
-      )
-    );
-  }
-}
-
-/* =========================================================
-VEHICLE POSITION EXTRACTION
-========================================================= */
-
-function extractVehiclePosition(
-  intelligence
-) {
-  const candidates = [
-    intelligence.vehicle_position,
-    intelligence.vehicle_location,
-    intelligence.current_position,
-    intelligence.position,
-    intelligence.vehicle,
-    state.vehicle
-  ];
-
-  for (const candidate of candidates) {
-    if (!candidate) {
-      continue;
-    }
-
-    const lat =
-      candidate.lat ??
-      candidate.latitude;
-
-    const lon =
-      candidate.lon ??
-      candidate.lng ??
-      candidate.longitude;
-
-    if (
-      validCoordinate(
-        lat,
-        lon
-      )
-    ) {
-      return {
-        lat: Number(lat),
-        lon: Number(lon)
-      };
-    }
-  }
-
-  return null;
 }
 
 /* =========================================================
@@ -3814,12 +3190,1298 @@ function centerOnVehicle() {
         state.shipment.origin_lat,
         state.shipment.origin_lon
       ],
-      13,
+      12,
       {
         animate: true
       }
     );
   }
+}
+
+/* =========================================================
+FOLLOW VEHICLE
+========================================================= */
+
+function toggleFollow() {
+  state.followingVehicle =
+    !state.followingVehicle;
+
+  const button =
+    $("followButton");
+
+  button?.classList.toggle(
+    "active",
+    state.followingVehicle
+  );
+
+  if (
+    state.followingVehicle
+  ) {
+    centerOnVehicle();
+  }
+}
+
+/* =========================================================
+JOURNEY PROGRESS
+========================================================= */
+
+function updateProgressFromGps() {
+  if (
+    !state.currentPosition ||
+    !state.selectedRoute
+  ) {
+    return;
+  }
+
+  const route =
+    state.selectedRoute;
+
+  const latLngs =
+    geometryToLatLngs(
+      route.geometry
+    );
+
+  if (
+    !latLngs ||
+    latLngs.length < 2
+  ) {
+    return;
+  }
+
+  const nearest =
+    nearestPointOnRoute(
+      state.currentPosition,
+      latLngs
+    );
+
+  if (!nearest) {
+    return;
+  }
+
+  const totalDistance =
+    polylineDistance(
+      latLngs
+    );
+
+  const remainingDistance =
+    polylineDistance(
+      latLngs.slice(
+        nearest.index
+      )
+    );
+
+  const progress =
+    totalDistance > 0
+      ? clamp(
+          1 -
+          remainingDistance /
+          totalDistance,
+          0,
+          1
+        )
+      : 0;
+
+  if (
+    totalDistance > 0
+  ) {
+    setText(
+      "distanceValue",
+      `${remainingDistance.toFixed(
+        1
+      )} km`
+    );
+  }
+
+  updateEta(
+    remainingDistance
+  );
+
+  if (
+    progress >= 0.98
+  ) {
+    setText(
+      "nextInstruction",
+      "You are near the destination"
+    );
+
+    setText(
+      "nextDistance",
+      "Final"
+    );
+  }
+}
+
+/* =========================================================
+ETA
+========================================================= */
+
+function updateEta(
+  remainingDistance
+) {
+  let speed =
+    state.currentPosition?.speed;
+
+  if (
+    !speed ||
+    speed < 5
+  ) {
+    speed =
+      estimateRouteSpeed();
+  }
+
+  if (
+    !speed ||
+    speed <= 0
+  ) {
+    return;
+  }
+
+  const minutes =
+    (
+      remainingDistance /
+      speed
+    ) * 60;
+
+  setText(
+    "etaValue",
+    formatMinutes(
+      minutes
+    )
+  );
+}
+
+function estimateRouteSpeed() {
+  if (
+    state.selectedRoute &&
+    state.selectedRoute.duration > 0 &&
+    state.selectedRoute.distance > 0
+  ) {
+    return (
+      state.selectedRoute.distance /
+      (
+        state.selectedRoute.duration /
+        60
+      )
+    );
+  }
+
+  return 35;
+}
+
+/* =========================================================
+NAVIGATION INSTRUCTION
+========================================================= */
+
+function updateNavigationInstruction(
+  intelligence
+) {
+  const instructions =
+    intelligence.instructions ||
+    intelligence.steps ||
+    intelligence.navigation_steps;
+
+  if (
+    !Array.isArray(
+      instructions
+    ) ||
+    !instructions.length
+  ) {
+    return;
+  }
+
+  const first =
+    instructions[0];
+
+  if (
+    typeof first === "string"
+  ) {
+    setText(
+      "nextInstruction",
+      first
+    );
+
+    return;
+  }
+
+  setText(
+    "nextInstruction",
+    first.instruction ||
+    first.name ||
+    first.maneuver ||
+    "Continue on route"
+  );
+
+  if (
+    first.distance
+  ) {
+    setText(
+      "nextDistance",
+      formatDistance(
+        first.distance
+      )
+    );
+  }
+}
+
+/* =========================================================
+RISK
+========================================================= */
+
+function updateRisk(
+  intelligence
+) {
+  if (!intelligence) {
+    return;
+  }
+
+  const selected = state.selectedRoute;
+
+  // Prefer the journey-level AI risk from the backend.
+  // Fall back to the selected route only when journey risk is absent.
+  const rawRisk =
+    intelligence.risk_percent ??
+    intelligence.risk_percentage ??
+    intelligence.risk_score ??
+    intelligence.disruption_risk ??
+    intelligence.risk ??
+    selected?.risk;
+
+  const hasRisk =
+    rawRisk !== null &&
+    rawRisk !== undefined &&
+    rawRisk !== "" &&
+    Number.isFinite(Number(rawRisk));
+
+  if (!hasRisk) {
+    setText("riskLevel", "ANALYZING");
+    setText("riskScore", "--");
+
+    const progress = $("riskProgress");
+    if (progress) {
+      progress.style.width = "0%";
+    }
+  } else {
+    const risk = normalizeRisk(rawRisk);
+    const percent = Math.round(risk * 100);
+
+    const backendLevel =
+      intelligence.risk_level ??
+      intelligence.riskLevel;
+
+    const level =
+      backendLevel
+        ? normalizeRiskLevel(backendLevel)
+        : risk >= 0.75
+          ? "dangerous"
+          : risk >= 0.40
+            ? "moderate"
+            : "safe";
+
+    const levelText =
+      level === "dangerous"
+        ? "HIGH RISK"
+        : level === "moderate"
+          ? "MODERATE RISK"
+          : "LOW RISK";
+
+    setText("riskLevel", levelText);
+    setText("riskScore", `${percent}%`);
+
+    const progress = $("riskProgress");
+    if (progress) {
+      progress.style.width = `${percent}%`;
+      progress.style.background =
+        level === "dangerous"
+          ? "#ef4444"
+          : level === "moderate"
+            ? "#f59e0b"
+            : "#22c55e";
+    }
+  }
+
+  // WEATHER
+  const weather = intelligence.weather;
+  const weatherRisk =
+    intelligence.weather_risk ??
+    intelligence.weather_risk_percent ??
+    intelligence.weather_score ??
+    (weather && typeof weather === "object"
+      ? weather.risk_percent ?? weather.risk_score ?? weather.risk
+      : null);
+
+  setText(
+    "weatherRisk",
+    weatherRisk !== null && weatherRisk !== undefined
+      ? formatRiskValue(weatherRisk)
+      : weather && typeof weather === "object" && weather.condition
+        ? String(weather.condition)
+        : "Unavailable"
+  );
+
+  // TRAFFIC
+  const trafficUnavailable =
+    intelligence.traffic_available === false ||
+    String(intelligence.traffic_level ?? "").toLowerCase() === "unknown";
+
+  const trafficValue =
+    intelligence.traffic_risk ??
+    intelligence.traffic_risk_percent ??
+    intelligence.traffic_score ??
+    intelligence.traffic;
+
+  setText(
+    "trafficRisk",
+    trafficUnavailable
+      ? "Unavailable"
+      : trafficValue !== null && trafficValue !== undefined
+        ? formatRiskValue(trafficValue)
+        : intelligence.traffic_level
+          ? formatStatus(intelligence.traffic_level)
+          : "Unavailable"
+  );
+
+  // ROAD: backend accessibility is a positive percentage, so display
+  // accessibility rather than accidentally calling 92% accessibility 92% risk.
+  const roadAccessibility =
+    intelligence.road_accessibility_percent ??
+    intelligence.accessibility_percent ??
+    intelligence.road_accessibility ??
+    intelligence.accessibility ??
+    selected?.accessibility;
+
+  if (roadAccessibility !== null && roadAccessibility !== undefined && roadAccessibility !== "") {
+    const accessibility = normalizeAccessibility(roadAccessibility);
+    setText("roadRisk", `${Math.round(accessibility * 100)}% accessible`);
+  } else {
+    const roadRisk =
+      intelligence.road_risk ??
+      intelligence.road_risk_percent ??
+      intelligence.accessibility_risk;
+
+    setText(
+      "roadRisk",
+      roadRisk !== null && roadRisk !== undefined
+        ? formatRiskValue(roadRisk)
+        : "Unavailable"
+    );
+  }
+}
+
+
+function formatRiskValue(
+  value
+) {
+  if (
+    value === null ||
+    value === undefined ||
+    value === ""
+  ) {
+    return "--";
+  }
+
+  if (
+    typeof value === "string"
+  ) {
+    return value;
+  }
+
+  const normalized =
+    normalizeRisk(
+      value
+    );
+
+  return `${Math.round(
+    normalized * 100
+  )}%`;
+}
+
+/* =========================================================
+ALERTS
+========================================================= */
+
+function updateAlerts(
+  intelligence
+) {
+  const alerts =
+    intelligence.alerts ||
+    intelligence.hazards ||
+    intelligence.active_alerts;
+
+  if (
+    Array.isArray(alerts) &&
+    alerts.length > 0
+  ) {
+    const alert =
+      alerts[0];
+
+    showAlert(
+      alert.title ||
+      alert.alert_type ||
+      "Route Alert",
+
+      alert.message ||
+      alert.description ||
+      "Hazard detected ahead."
+    );
+
+    return;
+  }
+
+  const risk =
+    normalizeRisk(
+      intelligence.risk_score ??
+      intelligence.risk
+    );
+
+  if (
+    risk >= 0.75
+  ) {
+    showAlert(
+      "Critical Route Risk",
+      "DAL has detected critical disruption risk on the current journey."
+    );
+
+    return;
+  }
+
+  hide(
+    "alertCard"
+  );
+}
+
+function showAlert(
+  title,
+  message
+) {
+  show(
+    "alertCard"
+  );
+
+  setText(
+    "alertTitle",
+    title
+  );
+
+  setText(
+    "alertMessage",
+    message
+  );
+}
+
+/* =========================================================
+TRAFFIC-AHEAD / REROUTE
+========================================================= */
+
+function checkForReroute(
+  intelligence
+) {
+  const selected =
+    state.selectedRoute;
+
+  if (!selected) {
+    return;
+  }
+
+  const currentRisk =
+    normalizeRisk(
+      selected.risk
+    );
+
+  const safest =
+    chooseSafestRoute(
+      state.routes
+    );
+
+  if (
+    !safest ||
+    String(safest.id) ===
+    String(selected.id)
+  ) {
+    return;
+  }
+
+  const saferBy =
+    currentRisk -
+    safest.risk;
+
+  if (
+    currentRisk >= 0.60 &&
+    saferBy >= 0.15 &&
+    !state.reroutePending
+  ) {
+    state.reroutePending =
+      true;
+
+    showRerouteModal(
+      selected,
+      safest
+    );
+  }
+}
+
+/* =========================================================
+REROUTE MODAL
+========================================================= */
+
+function showRerouteModal(
+  current,
+  recommended
+) {
+  show(
+    "rerouteModal"
+  );
+
+  setText(
+    "rerouteMessage",
+    `Current route risk is ${Math.round(
+      current.risk * 100
+    )}%. DAL found a safer alternative with ${Math.round(
+      recommended.risk * 100
+    )}% risk.`
+  );
+
+  setText(
+    "currentRouteRisk",
+    `${current.name} — ${Math.round(
+      current.risk * 100
+    )}%`
+  );
+
+  setText(
+    "recommendedRouteRisk",
+    `${recommended.name} — ${Math.round(
+      recommended.risk * 100
+    )}%`
+  );
+}
+
+/* =========================================================
+ACCEPT REROUTE
+========================================================= */
+
+async function acceptReroute() {
+  const safest =
+    chooseSafestRoute(
+      state.routes
+    );
+
+  if (!safest) {
+    return;
+  }
+
+  hide(
+    "rerouteModal"
+  );
+
+  state.reroutePending =
+    false;
+
+  await selectRoute(
+    safest,
+    true
+  );
+
+  showAlert(
+    "Route Updated",
+    `${safest.name} selected as the safer route based on current conditions.`
+  );
+}
+
+/* =========================================================
+KEEP CURRENT ROUTE
+========================================================= */
+
+function keepCurrentRoute() {
+  hide(
+    "rerouteModal"
+  );
+
+  state.reroutePending =
+    false;
+}
+
+/* =========================================================
+DELIVERY
+========================================================= */
+
+async function markDelivered() {
+  if (
+    !state.shipment
+  ) {
+    return;
+  }
+
+  const confirmed =
+    window.confirm(
+      "Confirm that this shipment has been delivered?"
+    );
+
+  if (!confirmed) {
+    return;
+  }
+
+  const shipmentId =
+    encodeURIComponent(
+      state.shipment.id
+    );
+
+  try {
+    await api(
+      `/api/v1/shipments/${shipmentId}/deliver`,
+      {
+        method: "POST"
+      }
+    );
+
+    stopGpsTracking();
+
+    state.navigationStarted =
+      false;
+
+    setText(
+      "shipmentStatus",
+      "Delivered"
+    );
+
+    renderMissionSummary();
+
+    setText(
+      "deliveredShipment",
+      state.shipment.id
+    );
+
+    setText(
+      "deliveredVehicle",
+      state.vehicle.vehicle_number ||
+      state.vehicle.id
+    );
+
+    hide(
+      "stopNavigationButton"
+    );
+
+    hide(
+      "deliverButton"
+    );
+
+    show(
+      "deliveryModal"
+    );
+
+    setConnection(
+      "connected",
+      "Delivery Recorded"
+    );
+  } catch (error) {
+    console.error(
+      "Delivery failed:",
+      error
+    );
+
+    alert(
+      `Could not record delivery.\n\n${error.message}`
+    );
+  }
+}
+
+/* =========================================================
+LOGOUT
+========================================================= */
+
+function logoutDriver() {
+  const confirmed = window.confirm(
+    "Logout from this driver portal?"
+  );
+
+  if (!confirmed) {
+    return;
+  }
+
+  if (state.refreshTimer) {
+    clearInterval(state.refreshTimer);
+    state.refreshTimer = null;
+  }
+
+  stopGpsTracking();
+
+  state.navigationStarted = false;
+  state.reroutePending = false;
+  state.driver = null;
+  state.vehicle = null;
+  state.shipment = null;
+  state.routes = [];
+  state.selectedRoute = null;
+  state.lastIntelligence = null;
+  state.currentPosition = null;
+  state.previousPosition = null;
+  state.lastGpsSentAt = 0;
+
+  localStorage.removeItem("DAL_DRIVER_ID");
+
+  const url = new URL(window.location.href);
+  url.searchParams.delete("driver_id");
+
+  // Reloading gives a clean application state without touching DAL_API_URL.
+  window.location.replace(url.toString());
+}
+
+/* =========================================================
+AUTO REFRESH
+========================================================= */
+
+function startAutoRefresh() {
+  if (
+    state.refreshTimer
+  ) {
+    clearInterval(
+      state.refreshTimer
+    );
+  }
+
+  state.refreshTimer =
+    setInterval(
+      async () => {
+        try {
+          await reloadLiveDriver();
+
+          await refreshIntelligence();
+        } catch (error) {
+          console.error(
+            "Live refresh failed:",
+            error
+          );
+        }
+      },
+      CONFIG.REFRESH_INTERVAL
+    );
+}
+
+/* =========================================================
+LIVE DRIVER / VEHICLE REFRESH
+========================================================= */
+
+async function reloadLiveDriver() {
+  if (
+    !state.driver
+  ) {
+    return;
+  }
+
+  try {
+    const [
+      driversResponse,
+      vehiclesResponse,
+      shipmentsResponse
+    ] = await Promise.all([
+      api("/api/v1/drivers/"),
+      api("/api/v1/vehicles"),
+      api("/api/v1/shipments")
+    ]);
+
+    const drivers =
+      normalizeCollection(
+        driversResponse
+      );
+
+    const vehicles =
+      normalizeCollection(
+        vehiclesResponse
+      );
+
+    const shipments =
+      normalizeCollection(
+        shipmentsResponse
+      );
+
+    const updatedDriver =
+      drivers.find(
+        driver =>
+          String(driver.id) ===
+          String(state.driver.id)
+      );
+
+    if (updatedDriver) {
+      state.driver =
+        {
+          ...state.driver,
+          ...updatedDriver
+        };
+    }
+
+    state.vehicle =
+      findDriverVehicle(
+        state.driver,
+        vehicles
+      );
+
+    state.shipment =
+      findAssignedShipment(
+        shipments,
+        state.vehicle
+      );
+
+    renderDriver();
+
+    if (!state.vehicle) {
+      renderNoVehicle();
+
+      return;
+    }
+
+    renderVehicle();
+
+    if (!state.shipment) {
+      renderVehicleOnly();
+
+      return;
+    }
+
+    renderShipment();
+
+    renderShipmentMarkers();
+
+    if (
+      !state.currentPosition &&
+      validCoordinate(
+        state.vehicle.current_lat,
+        state.vehicle.current_lon
+      )
+    ) {
+      updateVehicleMarker(
+        state.vehicle.current_lat,
+        state.vehicle.current_lon
+      );
+    }
+  } catch (error) {
+    console.warn(
+      "Driver refresh failed:",
+      error.message
+    );
+  }
+}
+
+/* =========================================================
+NO ASSIGNMENT UI
+========================================================= */
+
+function renderNoAssignment(
+  message
+) {
+  hide(
+    "startNavigationButton"
+  );
+
+  hide(
+    "stopNavigationButton"
+  );
+
+  hide(
+    "deliverButton"
+  );
+
+  const routeList =
+    $("routeList");
+
+  if (routeList) {
+    routeList.innerHTML = `
+      <div class="loading-state">
+          <span>
+              ${escapeHtml(
+                message
+              )}
+          </span>
+      </div>
+    `;
+  }
+
+  setText(
+    "shipmentId",
+    "No Assignment"
+  );
+
+  setText(
+    "shipmentStatus",
+    "Waiting"
+  );
+}
+
+function renderVehicleOnly() {
+  setText(
+    "shipmentId",
+    "No Active Shipment"
+  );
+
+  setText(
+    "shipmentStatus",
+    "Waiting"
+  );
+
+  const routeList =
+    $("routeList");
+
+  if (routeList) {
+    routeList.innerHTML = `
+      <div class="loading-state">
+          <span>
+              No shipment is currently
+              assigned to this vehicle.
+          </span>
+      </div>
+    `;
+  }
+
+  disableNavigation();
+}
+
+/* =========================================================
+INITIAL ERROR
+========================================================= */
+
+function showInitialError(
+  message
+) {
+  show(
+    "driverSelectionScreen"
+  );
+
+  const selectionMessage =
+    $("driverSelectionMessage");
+
+  if (selectionMessage) {
+    selectionMessage.textContent =
+      `Unable to connect to DAL backend: ${message}`;
+  }
+
+  const routeList =
+    $("routeList");
+
+  if (routeList) {
+    routeList.innerHTML = `
+      <div class="loading-state">
+          <span>
+              Unable to connect to DAL backend.
+          </span>
+
+          <small style="
+              color:#657186;
+              margin-top:5px;
+              text-align:center;
+              max-width:280px;
+          ">
+              ${escapeHtml(
+                message
+              )}
+          </small>
+      </div>
+    `;
+  }
+
+  setText(
+    "shipmentId",
+    "Backend Offline"
+  );
+
+  setText(
+    "shipmentStatus",
+    "Connection Error"
+  );
+}
+
+/* =========================================================
+FORMATTING
+========================================================= */
+
+function formatStatus(
+  status
+) {
+  if (!status) {
+    return "--";
+  }
+
+  return String(status)
+    .replace(/_/g, " ")
+    .replace(
+      /\b\w/g,
+      char =>
+        char.toUpperCase()
+    );
+}
+
+function formatMinutes(
+  minutes
+) {
+  const value =
+    number(
+      minutes,
+      0
+    );
+
+  if (
+    value < 1
+  ) {
+    return "<1 min";
+  }
+
+  const rounded =
+    Math.round(
+      value
+    );
+
+  if (
+    rounded < 60
+  ) {
+    return `${rounded} min`;
+  }
+
+  const hours =
+    Math.floor(
+      rounded / 60
+    );
+
+  const remaining =
+    rounded %
+    60;
+
+  if (
+    remaining === 0
+  ) {
+    return `${hours} hr`;
+  }
+
+  return (
+    `${hours} hr ${remaining} min`
+  );
+}
+
+function formatDistance(
+  value
+) {
+  const distance =
+    number(
+      value
+    );
+
+  if (
+    distance <= 0
+  ) {
+    return "--";
+  }
+
+  if (
+    distance < 1000
+  ) {
+    return `${Math.round(
+      distance
+    )} m`;
+  }
+
+  return `${(
+    distance / 1000
+  ).toFixed(1)} km`;
+}
+
+function riskTextClass(
+  level
+) {
+  if (
+    level === "dangerous"
+  ) {
+    return "dangerous-text";
+  }
+
+  if (
+    level === "moderate"
+  ) {
+    return "moderate-text";
+  }
+
+  return "safe-text";
+}
+
+/* =========================================================
+GEOGRAPHIC CALCULATIONS
+========================================================= */
+
+function haversineKm(
+  lat1,
+  lon1,
+  lat2,
+  lon2
+) {
+  const R =
+    6371;
+
+  const dLat =
+    toRadians(
+      lat2 - lat1
+    );
+
+  const dLon =
+    toRadians(
+      lon2 - lon1
+    );
+
+  const a =
+    Math.sin(
+      dLat / 2
+    ) ** 2 +
+
+    Math.cos(
+      toRadians(lat1)
+    ) *
+
+    Math.cos(
+      toRadians(lat2)
+    ) *
+
+    Math.sin(
+      dLon / 2
+    ) ** 2;
+
+  const c =
+    2 *
+    Math.atan2(
+      Math.sqrt(a),
+      Math.sqrt(1 - a)
+    );
+
+  return R * c;
+}
+
+function toRadians(
+  degrees
+) {
+  return (
+    degrees *
+    Math.PI /
+    180
+  );
+}
+
+function polylineDistance(
+  points
+) {
+  if (
+    !points ||
+    points.length < 2
+  ) {
+    return 0;
+  }
+
+  let total = 0;
+
+  for (
+    let i = 1;
+    i < points.length;
+    i++
+  ) {
+    total +=
+      haversineKm(
+        points[i - 1][0],
+        points[i - 1][1],
+        points[i][0],
+        points[i][1]
+      );
+  }
+
+  return total;
+}
+
+/* =========================================================
+NEAREST ROUTE POINT
+========================================================= */
+
+function nearestPointOnRoute(
+  position,
+  points
+) {
+  if (
+    !position ||
+    !points ||
+    !points.length
+  ) {
+    return null;
+  }
+
+  let nearestIndex = 0;
+
+  let smallestDistance =
+    Infinity;
+
+  points.forEach(
+    (point, index) => {
+      const distance =
+        haversineKm(
+          position.lat,
+          position.lon,
+          point[0],
+          point[1]
+        );
+
+      if (
+        distance <
+        smallestDistance
+      ) {
+        smallestDistance =
+          distance;
+
+        nearestIndex =
+          index;
+      }
+    }
+  );
+
+  return {
+    index:
+      nearestIndex,
+
+    distance:
+      smallestDistance
+  };
+}
+
+/* =========================================================
+VEHICLE POSITION EXTRACTION
+========================================================= */
+
+function extractVehiclePosition(
+  intelligence
+) {
+  const candidates = [
+    intelligence.vehicle_position,
+    intelligence.vehicle_location,
+    intelligence.current_position,
+    intelligence.position
+  ];
+
+  for (const candidate of candidates) {
+    if (!candidate) {
+      continue;
+    }
+
+    const lat =
+      candidate.lat ??
+      candidate.latitude;
+
+    const lon =
+      candidate.lon ??
+      candidate.lng ??
+      candidate.longitude;
+
+    if (
+      validCoordinate(
+        lat,
+        lon
+      )
+    ) {
+      return {
+        lat: Number(lat),
+        lon: Number(lon)
+      };
+    }
+  }
+
+  return null;
 }
 
 /* =========================================================
@@ -3907,62 +4569,6 @@ function coordinateLabel(
 }
 
 /* =========================================================
-FORMAT HELPERS
-========================================================= */
-
-function formatMinutes(minutes) {
-  const mins = Math.round(minutes);
-
-  if (mins < 60) {
-    return `${mins} min`;
-  }
-
-  const hours = Math.floor(mins / 60);
-  const remainder = mins % 60;
-
-  if (remainder === 0) {
-    return `${hours}h`;
-  }
-
-  return `${hours}h ${remainder}m`;
-}
-
-function formatDistance(meters) {
-  if (meters < 1000) {
-    return `${Math.round(meters)}m`;
-  }
-
-  return `${(meters / 1000).toFixed(1)}km`;
-}
-
-function formatStatus(status) {
-  if (!status) {
-    return "--";
-  }
-
-  return String(status)
-    .split("_")
-    .map(
-      word =>
-        word.charAt(0).toUpperCase() +
-        word.slice(1).toLowerCase()
-    )
-    .join(" ");
-}
-
-function riskTextClass(level) {
-  if (level === "dangerous") {
-    return "text-red";
-  }
-
-  if (level === "moderate") {
-    return "text-yellow";
-  }
-
-  return "text-green";
-}
-
-/* =========================================================
 DEBUG ACCESS
 ========================================================= */
 
@@ -3979,5 +4585,8 @@ window.DAL_DRIVER = {
     startNavigation,
 
   stop:
-    stopNavigation
+    stopNavigation,
+
+  logout:
+    logoutDriver
 };
