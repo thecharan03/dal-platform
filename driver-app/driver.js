@@ -3530,7 +3530,7 @@ function updateRisk(intelligence) {
     percent,
     level
   );
-}
+
 
 /* =========================================================
 MISSION RISK
