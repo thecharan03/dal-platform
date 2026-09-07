@@ -424,7 +424,7 @@ def choose_traffic_route(routes, risk_score, shipment_priority):
     max_time = max((r["estimated_time_minutes"] for r in routes), default=1) or 1
     for r in routes:
         distance_norm = r["distance_km"] / max_distance
-        time_norm = r["estimated_time_minutes"] / max_time
+        time_norm = r["estimated_time_minutes"] / max_tiDAL_API_URLme
         score = (
             traffic_w * r["traffic_score"]
             + risk_w * risk_score
@@ -436,24 +436,24 @@ def choose_traffic_route(routes, risk_score, shipment_priority):
 
 def compute_intelligence(shipment, vehicle, telemetry):
     origin_lat = safe_float(
-    telemetry["latitude"]
-    if telemetry and telemetry["latitude"] is not None
-    else (
-        vehicle.current_lat
-        if vehicle and vehicle.current_lat is not None
-        else shipment.origin_lat
+        telemetry["latitude"]
+        if telemetry and telemetry["latitude"] is not None
+        else (
+            vehicle.current_lat
+            if vehicle and vehicle.current_lat is not None
+            else shipment.origin_lat
+        )
     )
-)
 
     origin_lon = safe_float(
-    telemetry["longitude"]
-    if telemetry and telemetry["longitude"] is not None
-    else (
-        vehicle.current_lon
-        if vehicle and vehicle.current_lon is not None
-        else shipment.origin_lon
+        telemetry["longitude"]
+        if telemetry and telemetry["longitude"] is not None
+        else (
+            vehicle.current_lon
+            if vehicle and vehicle.current_lon is not None
+            else shipment.origin_lon
+        )
     )
-)
 
     print("DEBUG ORIGIN:")
     print("telemetry =", telemetry)
@@ -466,116 +466,216 @@ def compute_intelligence(shipment, vehicle, telemetry):
     destination_lat = safe_float(shipment.destination_lat)
     destination_lon = safe_float(shipment.destination_lon)
 
+    # ============================================================
+    # WEATHER
+    # ============================================================
+
     weather_data = {}
-    base_route = {}
-    traffic_routes = None
+    prediction = {}
+    base_risk = 0.0
+    hazard_risk = 0.0
+
     try:
-        weather_data = fetch_live_weather(destination_lat, destination_lon)
-        prediction = weather_data.get("risk", {})
-        base_risk = safe_float(
-            prediction.get("ml_probability", prediction.get("risk_score"))
+        weather_data = fetch_live_weather(
+            destination_lat,
+            destination_lon
         )
+
+        prediction = weather_data.get("risk", {})
+
+        base_risk = safe_float(
+            prediction.get(
+                "ml_probability",
+                prediction.get("risk_score")
+            )
+        )
+
         hazard_risk = safe_float(
             prediction.get("hazard_score"),
             safe_float(weather_data.get("flood_risk_score")) * 0.45
             + safe_float(weather_data.get("landslide_risk_score")) * 0.55,
         )
 
-        # First choice: real traffic-aware road routing.
-        try:
-            traffic_routes = fetch_mapbox_traffic_routes(
-                origin_lat, origin_lon, destination_lat, destination_lon
-            )
-        except Exception as traffic_exc:
-            print(f"Traffic routing unavailable: {traffic_exc}")
+    except Exception as weather_exc:
+        # Weather failure should NOT stop route calculation.
+        print(f"⚠️ Weather unavailable: {weather_exc}")
 
-        if traffic_routes:
-            selected = choose_traffic_route(
-                traffic_routes,
-                base_risk,
-                shipment.category or "normal",
-            )
-            alternatives = [r for r in traffic_routes if r["route_index"] != selected["route_index"]]
-            combined_condition_score = max(
-                base_risk,
-                selected.get("traffic_score", 0),
-            )
-            if combined_condition_score >= 0.75:
-                condition = "critical"
-            elif combined_condition_score >= 0.60:
-                condition = "high"
-            elif combined_condition_score >= 0.40:
-                condition = "moderate"
-            else:
-                condition = "safe"
+        weather_data = {
+            "status": "UNAVAILABLE",
+            "source": "Open-Meteo",
+            "error": str(weather_exc),
+            "risk": {},
+        }
 
-            # Traffic can force a reroute even when disaster risk alone is low.
-            reroute_required = (
-                base_risk >= 0.60
-                or selected.get("traffic_score", 0) >= 0.60
-                or (
-                    alternatives
-                    and min(r.get("traffic_score", 1) for r in alternatives)
-                    + 0.15 < selected.get("traffic_score", 1)
+        prediction = {}
+        base_risk = 0.0
+        hazard_risk = 0.0
+
+    # ============================================================
+    # MAPBOX TRAFFIC ROUTING
+    # ============================================================
+
+    traffic_routes = None
+
+    try:
+        traffic_routes = fetch_mapbox_traffic_routes(
+            origin_lat,
+            origin_lon,
+            destination_lat,
+            destination_lon
+        )
+    except Exception as traffic_exc:
+        print(f"⚠️ Traffic routing unavailable: {traffic_exc}")
+
+    # ============================================================
+    # MAPBOX ROUTING AVAILABLE
+    # ============================================================
+
+    if traffic_routes:
+        selected = choose_traffic_route(
+            traffic_routes,
+            base_risk,
+            shipment.category or "normal",
+        )
+
+        alternatives = [
+            r for r in traffic_routes
+            if r["route_index"] != selected["route_index"]
+        ]
+
+        combined_condition_score = max(
+            base_risk,
+            selected.get("traffic_score", 0),
+        )
+
+        if combined_condition_score >= 0.75:
+            condition = "critical"
+        elif combined_condition_score >= 0.60:
+            condition = "high"
+        elif combined_condition_score >= 0.40:
+            condition = "moderate"
+        else:
+            condition = "safe"
+
+        reroute_required = (
+            base_risk >= 0.60
+            or selected.get("traffic_score", 0) >= 0.60
+            or (
+                alternatives
+                and min(
+                    r.get("traffic_score", 1)
+                    for r in alternatives
                 )
+                + 0.15
+                < selected.get("traffic_score", 1)
             )
+        )
 
-            traffic_ahead = []
-            for seg in selected.get("traffic_segments", []):
-                if seg.get("congestion") in {"moderate", "heavy", "severe"}:
-                    traffic_ahead.append(seg)
-            traffic_ahead = traffic_ahead[:20]
+        traffic_ahead = []
 
-            return {
-                "weather": weather_data,
-                "ml_prediction": prediction,
-                "risk_percent": round(max(base_risk, selected.get("traffic_score", 0)) * 100, 1),
-                "risk_score": max(base_risk, selected.get("traffic_score", 0)),
-                "selected_route": selected,
-                "alternative_routes": alternatives,
-                "route_comparison": traffic_routes,
-                "route_geometry": selected.get("geometry", []),
-                "distance_km": selected.get("distance_km"),
-                "estimated_time_minutes": selected.get("estimated_time_minutes"),
-                "reroute_required": reroute_required,
-                "route_status": "reroute_required" if reroute_required else "optimal",
-                "route_condition": condition,
-                "road_accessibility_percent": round((1 - base_risk * 0.65) * 100, 1),
-                "decision_reason": (
-                    "Traffic-aware route selected because it minimizes live congestion and disruption risk."
-                    if selected.get("traffic_score", 0) > 0.20
-                    else "Safest route selected using live road, weather and ML disruption intelligence."
+        for seg in selected.get("traffic_segments", []):
+            if seg.get("congestion") in {
+                "moderate",
+                "heavy",
+                "severe"
+            }:
+                traffic_ahead.append(seg)
+
+        traffic_ahead = traffic_ahead[:20]
+
+        return {
+            "weather": weather_data,
+            "ml_prediction": prediction,
+            "risk_percent": round(
+                max(
+                    base_risk,
+                    selected.get("traffic_score", 0)
+                ) * 100,
+                1,
+            ),
+            "risk_score": max(
+                base_risk,
+                selected.get("traffic_score", 0)
+            ),
+            "selected_route": selected,
+            "alternative_routes": alternatives,
+            "route_comparison": traffic_routes,
+            "route_geometry": selected.get("geometry", []),
+            "distance_km": selected.get("distance_km"),
+            "estimated_time_minutes": selected.get(
+                "estimated_time_minutes"
+            ),
+            "reroute_required": reroute_required,
+            "route_status": (
+                "reroute_required"
+                if reroute_required
+                else "optimal"
+            ),
+            "route_condition": condition,
+            "road_accessibility_percent": round(
+                (1 - base_risk * 0.65) * 100,
+                1,
+            ),
+            "decision_reason": (
+                "Traffic-aware route selected because it minimizes "
+                "live congestion and disruption risk."
+                if selected.get("traffic_score", 0) > 0.20
+                else "Safest route selected using live road, weather "
+                "and ML disruption intelligence."
+            ),
+            "routes_found": len(traffic_routes),
+            "traffic": {
+                "available": True,
+                "source": "Mapbox Traffic",
+                "route_traffic_percent": selected.get(
+                    "traffic_percent",
+                    0
                 ),
-                "routes_found": len(traffic_routes),
-                "traffic": {
-                    "available": True,
-                    "source": "Mapbox Traffic",
-                    "route_traffic_percent": selected.get("traffic_percent", 0),
-                    "traffic_score": selected.get("traffic_score", 0),
-                    "traffic_ahead": traffic_ahead,
-                    "traffic_segments": selected.get("traffic_segments", []),
-                },
-                "origin_for_route": {"lat": origin_lat, "lon": origin_lon},
-                "updated_at": datetime.now(timezone.utc).isoformat(),
-            }
+                "traffic_score": selected.get(
+                    "traffic_score",
+                    0
+                ),
+                "traffic_ahead": traffic_ahead,
+                "traffic_segments": selected.get(
+                    "traffic_segments",
+                    []
+                ),
+            },
+            "origin_for_route": {
+                "lat": origin_lat,
+                "lon": origin_lon
+            },
+            "updated_at": datetime.now(
+                timezone.utc
+            ).isoformat(),
+        }
 
-        # Fallback: existing OSRM + ML/weather route intelligence.
+    # ============================================================
+    # OSRM FALLBACK
+    # ============================================================
+
+    print("🛣️ Using OSRM fallback routing...")
+
+    try:
         base_route = optimize_route(
-            base_risk_score=max(0, min(1, base_risk)),
-            weather_risk_score=max(0, min(1, hazard_risk)),
+            base_risk_score=max(
+                0,
+                min(1, base_risk)
+            ),
+            weather_risk_score=max(
+                0,
+                min(1, hazard_risk)
+            ),
             origin_lat=origin_lat,
             origin_lon=origin_lon,
             destination_lat=destination_lat,
             destination_lon=destination_lon,
             shipment_priority=shipment.category or "normal",
         )
-    except Exception as exc:
-        weather_data = {
-            "status": "UNAVAILABLE",
-            "source": "Open-Meteo",
-            "error": str(exc),
-            "risk": {},
-        }
+
+    except Exception as route_exc:
+        print(f"❌ OSRM routing failed: {route_exc}")
+
         base_route = {
             "risk_score": 0,
             "risk_percent": 0,
@@ -589,27 +689,66 @@ def compute_intelligence(shipment, vehicle, telemetry):
             "estimated_time_minutes": None,
             "reroute_required": False,
             "road_accessibility_percent": None,
-            "decision_reason": "Live route intelligence unavailable",
+            "decision_reason": f"Routing failed: {route_exc}",
             "routes_found": 0,
         }
 
+    # ============================================================
+    # FINAL RESPONSE
+    # ============================================================
+
     return {
         "weather": weather_data,
-        "ml_prediction": weather_data.get("risk", {}),
-        "risk_percent": base_route.get("risk_percent", 0),
-        "risk_score": base_route.get("risk_score", 0),
-        "selected_route": base_route.get("selected_route"),
-        "alternative_routes": base_route.get("alternative_routes", []),
-        "route_comparison": base_route.get("route_comparison", []),
-        "route_geometry": base_route.get("route_geometry", []),
-        "distance_km": base_route.get("distance_km"),
-        "estimated_time_minutes": base_route.get("estimated_time_minutes"),
-        "reroute_required": base_route.get("reroute_required", False),
-        "route_status": base_route.get("route_status"),
-        "route_condition": base_route.get("route_condition"),
-        "road_accessibility_percent": base_route.get("road_accessibility_percent"),
-        "decision_reason": base_route.get("decision_reason"),
-        "routes_found": base_route.get("routes_found", 0),
+        "ml_prediction": prediction,
+        "risk_percent": base_route.get(
+            "risk_percent",
+            0
+        ),
+        "risk_score": base_route.get(
+            "risk_score",
+            0
+        ),
+        "selected_route": base_route.get(
+            "selected_route"
+        ),
+        "alternative_routes": base_route.get(
+            "alternative_routes",
+            []
+        ),
+        "route_comparison": base_route.get(
+            "route_comparison",
+            []
+        ),
+        "route_geometry": base_route.get(
+            "route_geometry",
+            []
+        ),
+        "distance_km": base_route.get(
+            "distance_km"
+        ),
+        "estimated_time_minutes": base_route.get(
+            "estimated_time_minutes"
+        ),
+        "reroute_required": base_route.get(
+            "reroute_required",
+            False
+        ),
+        "route_status": base_route.get(
+            "route_status"
+        ),
+        "route_condition": base_route.get(
+            "route_condition"
+        ),
+        "road_accessibility_percent": base_route.get(
+            "road_accessibility_percent"
+        ),
+        "decision_reason": base_route.get(
+            "decision_reason"
+        ),
+        "routes_found": base_route.get(
+            "routes_found",
+            0
+        ),
         "traffic": {
             "available": False,
             "source": "Not configured",
@@ -617,11 +756,20 @@ def compute_intelligence(shipment, vehicle, telemetry):
             "traffic_score": None,
             "traffic_ahead": [],
             "traffic_segments": [],
-            "message": "Configure MAPBOX_ACCESS_TOKEN for live traffic-aware routing.",
+            "message": (
+                "Configure MAPBOX_ACCESS_TOKEN for "
+                "live traffic-aware routing."
+            ),
         },
-        "origin_for_route": {"lat": origin_lat, "lon": origin_lon},
-        "updated_at": datetime.now(timezone.utc).isoformat(),
+        "origin_for_route": {
+            "lat": origin_lat,
+            "lon": origin_lon
+        },
+        "updated_at": datetime.now(
+            timezone.utc
+        ).isoformat(),
     }
+
 
 
 def serialize_vehicle(vehicle, telemetry=None):
