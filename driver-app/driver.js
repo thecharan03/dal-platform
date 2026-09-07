@@ -2042,6 +2042,7 @@ function normalizeRoute(
   const risk =
     normalizeRisk(
       route.risk ??
+      route.risk_percent ??
       route.risk_score ??
       route.route_risk ??
       route.disruption_risk
