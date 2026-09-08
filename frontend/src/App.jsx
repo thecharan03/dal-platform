@@ -3670,66 +3670,109 @@ export default function App() {
      LOAD CONTROL ROOM
      ======================================================= */
 
-  const load =
-    useCallback(
-      async () => {
-        setRefreshing(true);
+const load =
+  useCallback(
+    async () => {
+      setRefreshing(true);
 
-        try {
-          const response =
-            await api.get(
-              "/shipments/live-control-room"
-            );
+      try {
+        const [
+          liveResponse,
+          shipmentsResponse,
+          driversResponse,
+          vehiclesResponse,
+        ] = await Promise.all([
+          api.get(
+            "/shipments/live-control-room"
+          ),
+          api.get(
+            "/shipments/"
+          ),
+          api.get(
+            "/drivers/"
+          ),
+          api.get(
+            "/vehicles/"
+          ),
+        ]);
 
-          setData(
-            response.data
-          );
+        const liveData =
+          liveResponse.data || {};
 
-          setSelected(
-            (previous) => {
-              if (!previous) {
-                return null;
-              }
+        const shipments =
+          Array.isArray(
+            liveData.shipments
+          )
+            ? liveData.shipments
+            : Array.isArray(
+                shipmentsResponse.data
+              )
+            ? shipmentsResponse.data
+            : [];
 
-              const next =
-                (
-                  response
-                    .data
-                    .shipments || []
-                ).find(
-                  (shipment) =>
-                    shipment.id ===
-                    previous.id
-                );
+        const drivers =
+          Array.isArray(
+            driversResponse.data
+          )
+            ? driversResponse.data
+            : [];
 
-              if (
-                !next ||
-                [
-                  "DELIVERED",
-                  "CANCELLED",
-                ].includes(
-                  normalizeStatus(
-                    next.status
-                  )
-                )
-              ) {
-                return null;
-              }
+        const vehicles =
+          Array.isArray(
+            vehiclesResponse.data
+          )
+            ? vehiclesResponse.data
+            : [];
 
-              return next;
+        setData({
+          ...liveData,
+          shipments,
+          drivers,
+          vehicles,
+        });
+
+        setSelected(
+          (previous) => {
+            if (!previous) {
+              return null;
             }
-          );
-        } catch (error) {
-          console.error(
-            errorText(error)
-          );
-        } finally {
-          setRefreshing(false);
-        }
-      },
-      []
-    );
 
+            const next =
+              shipments.find(
+                (shipment) =>
+                  shipment.id ===
+                  previous.id
+              );
+
+            if (
+              !next ||
+              [
+                "DELIVERED",
+                "CANCELLED",
+              ].includes(
+                normalizeStatus(
+                  next.status
+                )
+              )
+            ) {
+              return null;
+            }
+
+            return next;
+          }
+        );
+
+      } catch (error) {
+        console.error(
+          "Manager load failed:",
+          errorText(error)
+        );
+      } finally {
+        setRefreshing(false);
+      }
+    },
+    []
+  );
 
   /* =======================================================
      LOAD EVENTS
