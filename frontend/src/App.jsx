@@ -185,17 +185,56 @@ function riskClass(risk = 0) {
 
 
 function getRouteCoords(item) {
+  const intelligence =
+    item?.intelligence || {};
+
   const route =
-    item?.intelligence?.selected_route ||
-    item?.intelligence?.route ||
+    intelligence?.selected_route ||
+    intelligence?.route ||
     {};
 
   let geometry =
-    item?.intelligence?.route_geometry ||
+    intelligence?.route_geometry ||
     route?.route_geometry ||
     route?.geometry ||
     route?.coordinates ||
     [];
+
+  // GeoJSON Feature
+  if (
+    geometry &&
+    geometry.type === "Feature"
+  ) {
+    geometry =
+      geometry.geometry;
+  }
+
+  // GeoJSON Geometry
+  if (
+    geometry &&
+    geometry.type === "LineString"
+  ) {
+    geometry =
+      geometry.coordinates || [];
+  }
+
+  // GeoJSON FeatureCollection
+  if (
+    geometry &&
+    geometry.type ===
+      "FeatureCollection"
+  ) {
+    const feature =
+      geometry.features?.find(
+        (feature) =>
+          feature?.geometry?.type ===
+          "LineString"
+      );
+
+    geometry =
+      feature?.geometry?.coordinates ||
+      [];
+  }
 
   if (!Array.isArray(geometry)) {
     return [];
@@ -203,46 +242,66 @@ function getRouteCoords(item) {
 
   return geometry
     .map((point) => {
+      // GeoJSON: [longitude, latitude]
       if (
         Array.isArray(point) &&
         point.length >= 2
       ) {
-        return [
-          Number(point[1]),
-          Number(point[0]),
-        ];
+        const lon = Number(point[0]);
+        const lat = Number(point[1]);
+
+        if (
+          Number.isFinite(lat) &&
+          Number.isFinite(lon)
+        ) {
+          return [lat, lon];
+        }
       }
 
+      // Backend may return:
+      // { lat, lon }
       if (
         point &&
         point.lat != null &&
         point.lon != null
       ) {
-        return [
-          Number(point.lat),
-          Number(point.lon),
-        ];
+        const lat = Number(point.lat);
+        const lon = Number(point.lon);
+
+        if (
+          Number.isFinite(lat) &&
+          Number.isFinite(lon)
+        ) {
+          return [lat, lon];
+        }
       }
 
+      // Backend may return:
+      // { latitude, longitude }
       if (
         point &&
         point.latitude != null &&
         point.longitude != null
       ) {
-        return [
-          Number(point.latitude),
-          Number(point.longitude),
-        ];
+        const lat = Number(
+          point.latitude
+        );
+
+        const lon = Number(
+          point.longitude
+        );
+
+        if (
+          Number.isFinite(lat) &&
+          Number.isFinite(lon)
+        ) {
+          return [lat, lon];
+        }
       }
 
       return null;
     })
-    .filter(
-      (point) =>
-        point &&
-        Number.isFinite(point[0]) &&
-        Number.isFinite(point[1])
-    );
+    .filter(Boolean);
 }
 
 
